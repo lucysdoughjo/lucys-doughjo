@@ -82,7 +82,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <p className="mt-4 text-sm text-foreground/70">{orderWindow.label}</p>
 
           <ProductDetailForm
+            productId={product.id}
+            slug={product.slug}
             productName={product.name}
+            imageUrl={product.imageUrl}
             purchaseOptions={product.purchaseOptions}
             soldOut={product.soldOut}
             orderingDisabled={orderingDisabled}

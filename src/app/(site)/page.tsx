@@ -69,11 +69,11 @@ export default async function HomePage() {
             View full menu →
           </Link>
         </div>
-        {content.bakersNote ? (
+        {/* {content.bakersNote ? (
           <p className="mt-6 max-w-2xl rounded-sm border border-espresso/10 bg-white/40 px-4 py-3 text-sm leading-relaxed text-foreground/80">
             {content.bakersNote}
           </p>
-        ) : null}
+        ) : null} */}
         <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {products.map((product) => (
             <ProductCard

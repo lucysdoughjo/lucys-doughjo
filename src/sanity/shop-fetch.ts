@@ -13,6 +13,7 @@ import {
   latestWeeklyDropQuery,
   productBySlugQuery,
   productSlugsQuery,
+  productsBySlugsQuery,
   shopMenuQuery,
 } from "./queries";
 import type { ShopMenu, ShopProduct } from "./shop-types";
@@ -88,6 +89,49 @@ export const getShopMenu = cache(async (): Promise<ShopMenu> => {
     return { bakersNote, categories: getPlaceholderShopMenu() };
   }
 });
+
+export type ProductsBySlugsResult =
+  | { ok: true; bySlug: Map<string, ShopProduct> }
+  | { ok: false };
+
+export async function getProductsBySlugs(
+  slugs: string[],
+): Promise<ProductsBySlugsResult> {
+  const unique = [...new Set(slugs.filter(Boolean))];
+  if (unique.length === 0) {
+    return { ok: true, bySlug: new Map() };
+  }
+
+  if (!isSanityConfigured) {
+    const bySlug = new Map<string, ShopProduct>();
+    for (const slug of unique) {
+      const product = getPlaceholderProductBySlug(slug);
+      if (product) bySlug.set(slug, product);
+    }
+    return { ok: true, bySlug };
+  }
+
+  try {
+    const records = await sanityClient.fetch(productsBySlugsQuery, {
+      slugs: unique,
+    });
+
+    if (!Array.isArray(records)) {
+      return { ok: false };
+    }
+
+    const bySlug = new Map<string, ShopProduct>();
+    for (const record of records) {
+      const product = mapSanityProduct(record);
+      if (product) {
+        bySlug.set(product.slug, product);
+      }
+    }
+    return { ok: true, bySlug };
+  } catch {
+    return { ok: false };
+  }
+}
 
 export const getProductBySlug = cache(
   async (slug: string): Promise<ShopProduct | null> => {

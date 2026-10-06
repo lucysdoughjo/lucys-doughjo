@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import type { ProductImage } from "@/sanity/shop-types";
 
-const AUTO_ADVANCE_MS = 2000;
+const AUTO_ADVANCE_MS = 5000;
 
 function isSanityCdn(url: string) {
   return url.startsWith("https://cdn.sanity.io/");

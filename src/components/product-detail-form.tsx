@@ -10,14 +10,20 @@ import {
 } from "@/lib/pricing";
 
 type ProductDetailFormProps = {
+  productId: string;
+  slug: string;
   productName: string;
+  imageUrl: string;
   purchaseOptions: PurchaseOption[];
   soldOut: boolean;
   orderingDisabled: boolean;
 };
 
 export function ProductDetailForm({
+  productId,
+  slug,
   productName,
+  imageUrl,
   purchaseOptions,
   soldOut,
   orderingDisabled,
@@ -81,9 +87,6 @@ export function ProductDetailForm({
         >
           Quantity
         </label>
-        <p className="mt-1 text-xs text-foreground/60">
-          How many of this pack you want (not individual pieces).
-        </p>
         <div className="mt-2 flex items-center gap-3">
           <button
             type="button"
@@ -101,7 +104,12 @@ export function ProductDetailForm({
             max={99}
             value={packs}
             onChange={(event) =>
-              setPacks(Math.max(1, Number(event.target.value) || 1))
+              setPacks(
+                Math.min(
+                  99,
+                  Math.max(1, Math.floor(Number(event.target.value) || 1)),
+                ),
+              )
             }
             className="h-10 w-16 rounded-sm border border-espresso/20 bg-cream text-center text-sm"
             disabled={soldOut || orderingDisabled}
@@ -128,7 +136,10 @@ export function ProductDetailForm({
       </p>
 
       <AddToCartButton
+        productId={productId}
+        slug={slug}
         productName={productName}
+        imageUrl={imageUrl}
         soldOut={soldOut}
         orderingDisabled={orderingDisabled}
         purchaseOption={selectedOption}

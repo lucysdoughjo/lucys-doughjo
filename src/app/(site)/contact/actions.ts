@@ -1,14 +1,8 @@
 "use server";
 
 import { Resend } from "resend";
+import type { ContactFormState } from "@/app/(site)/contact/contact-form-state";
 import { getSiteContactSettings } from "@/sanity/fetch";
-
-export type ContactFormState =
-  | { status: "idle" }
-  | { status: "success" }
-  | { status: "error"; message: string };
-
-const initialState: ContactFormState = { status: "idle" };
 
 function cleanField(value: FormDataEntryValue | null, maxLength: number) {
   if (typeof value !== "string") {
@@ -78,5 +72,3 @@ export async function submitContactForm(
 
   return { status: "success" };
 }
-
-export { initialState as contactFormInitialState };

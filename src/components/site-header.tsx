@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Logo } from "@/components/logo";
+import { useCart } from "@/components/cart-provider";
 import {
   mobileNav,
   primaryNavLeft,
@@ -32,9 +33,11 @@ function CartLink({ count = 0 }: { count?: number }) {
         <path d="M3 6h18" />
         <path d="M16 10a4 4 0 0 1-8 0" />
       </svg>
-      <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-cream">
-        {count}
-      </span>
+      {count > 0 ? (
+        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-cream">
+          {count}
+        </span>
+      ) : null}
     </Link>
   );
 }
@@ -50,7 +53,8 @@ function NavLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
+export function SiteHeader() {
+  const { totalPacks } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -81,7 +85,7 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
               <NavLink key={item.href} href={item.href} label={item.label} />
             ))}
           </nav>
-          <CartLink count={cartCount} />
+          <CartLink count={totalPacks} />
           <button
             type="button"
             className="inline-flex p-2 md:hidden"

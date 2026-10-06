@@ -127,6 +127,38 @@ export const shopMenuQuery = defineQuery(`
   }
 `);
 
+export const productsBySlugsQuery = defineQuery(`
+  *[_type == "product" && slug.current in $slugs] {
+    _id,
+    name,
+    "slug": slug.current,
+    description,
+    priceCents,
+    unitsPerItem,
+    unitLabel,
+    priceTiers[] {
+      quantity,
+      priceCents,
+      label
+    },
+    soldOut,
+    availableThisWeek,
+    allergens,
+    image {
+      asset,
+      alt
+    },
+    gallery[] {
+      asset,
+      alt
+    },
+    "category": category-> {
+      name,
+      "slug": slug.current
+    }
+  }
+`);
+
 export const productBySlugQuery = defineQuery(`
   *[_type == "product" && slug.current == $slug][0] {
     _id,

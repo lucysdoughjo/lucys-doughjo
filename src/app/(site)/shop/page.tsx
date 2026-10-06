@@ -32,11 +32,11 @@ export default async function ShopPage() {
 
       <p className="mt-6 text-sm text-foreground/80">{orderWindow.label}</p>
 
-      {menu.bakersNote ? (
+      {/* {menu.bakersNote ? (
         <p className="mt-4 max-w-3xl rounded-sm border border-espresso/10 bg-white/40 px-4 py-3 text-sm leading-relaxed text-foreground/80">
           {menu.bakersNote}
         </p>
-      ) : null}
+      ) : null} */}
 
       {menu.categories.length > 0 ? (
         <nav

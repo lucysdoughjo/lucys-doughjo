@@ -2,11 +2,11 @@
 
 import { useActionState } from "react";
 import { Button } from "@/components/button";
+import { submitContactForm } from "@/app/(site)/contact/actions";
 import {
   contactFormInitialState,
-  submitContactForm,
   type ContactFormState,
-} from "@/app/(site)/contact/actions";
+} from "@/app/(site)/contact/contact-form-state";
 
 type ContactFormProps = {
   emailEnabled: boolean;
@@ -116,10 +116,6 @@ export function ContactForm({
           className="mt-2 w-full resize-y rounded-sm border border-espresso/15 bg-cream px-4 py-3 text-sm text-foreground outline-none ring-primary/30 focus:ring-2"
         />
       </div>
-      <p className="text-xs leading-relaxed text-foreground/60">
-        This form is for questions and notes — not for placing weekly preorders.
-        Order through Shop → Cart → Checkout.
-      </p>
       <Button type="submit" disabled={pending}>
         {pending ? "Sending…" : "Send message"}
       </Button>

@@ -8,10 +8,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-xs">
-            <Logo variant="wordmark" className="h-auto w-full max-w-[200px]" />
-            <p className="mt-3 text-xs font-medium uppercase tracking-[0.2em] text-foreground/70">
-              Microbakery · Chino, CA
-            </p>
+            <Logo variant="wordmark" className="h-auto w-full max-w-50" />
           </div>
 
           <nav

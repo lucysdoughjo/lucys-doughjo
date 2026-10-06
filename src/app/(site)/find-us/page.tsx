@@ -64,7 +64,7 @@ export default async function FindUsPage() {
           )}
         </div>
 
-        <figure className="relative aspect-[3/4] overflow-hidden rounded-sm bg-highlight/20 lg:sticky lg:top-28">
+        <figure className="relative aspect-3/4 overflow-hidden rounded-sm bg-highlight/20 ">
           <Image
             src="/assets/markets_popups/market-pop-up-current.jpg"
             alt="Lucy's Doughjo at a local market"

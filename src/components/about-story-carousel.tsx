@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 
-const AUTO_ADVANCE_MS = 2000;
+const AUTO_ADVANCE_MS = 5000;
 
 export type AboutStoryImage = {
   url: string;

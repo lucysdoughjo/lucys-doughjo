@@ -1,3 +1,4 @@
+import { CartProvider } from "@/components/cart-provider";
 import { DoughDropStatusBanner } from "@/components/dough-drop-status-banner";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -12,12 +13,12 @@ export default async function SiteLayout({
   const orderWindow = await getOrderWindowForSite();
 
   return (
-    <>
-      <SiteHeader cartCount={0} />
+    <CartProvider>
+      <SiteHeader />
       <SanityStatusBanner />
       <DoughDropStatusBanner state={orderWindow} />
       <main className="flex-1">{children}</main>
       <SiteFooter />
-    </>
+    </CartProvider>
   );
 }
