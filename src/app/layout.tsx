@@ -28,8 +28,8 @@ export const metadata: Metadata = {
   title: "Lucy's Doughjo",
   description: "Microbakery in Chino, CA — where joy meets the dough.",
   icons: {
-    icon: "/assets/icons/favicon.png",
-    apple: "/assets/icons/favicon.png",
+    icon: "/assets/icons/wheat-icon.png",
+    apple: "/assets/icons/wheat-icon.png",
   },
 };
 
