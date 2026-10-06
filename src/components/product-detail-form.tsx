@@ -111,7 +111,7 @@ export function ProductDetailForm({
                 ),
               )
             }
-            className="h-10 w-16 rounded-sm border border-espresso/20 bg-cream text-center text-sm"
+            className="h-10 w-16 rounded-sm border border-espresso/20 bg-cream text-center text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             disabled={soldOut || orderingDisabled}
           />
           <button
