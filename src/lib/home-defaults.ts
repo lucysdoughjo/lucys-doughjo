@@ -3,7 +3,7 @@ export const homeDefaults = {
   heroBody:
     "Handcrafted sourdough and fresh baked treats, naturally leavened and small-batch baked in Chino, CA.",
   scriptAccent: "Baked for good company.",
-  heroImageSrc: "/assets/homepage_hero/homepage-hero-artisan-sourdough.jpg",
+  heroImageSrc: "/assets/homepage_hero/homepage-hero-artisan-sourdough.jpeg",
   heroImageAlt: "Handcrafted artisan sourdough loaf",
   storyTitle: "A small-batch bakery",
   storyTeaser:
@@ -51,6 +51,15 @@ export const placeholderFeaturedProducts = [
     description: "Buttery scones with visible blueberry pockets.",
     imageSrc: "/assets/scones/blueberry-scone-primary.jpg",
     imageAlt: "Blueberry scone close-up",
+    soldOut: false,
+  },
+  {
+    slug: "bagels-original",
+    name: "Original Bagels",
+    priceLabel: "$10 4-pack",
+    description: "Small-batch bagels — sold as a 4-pack.",
+    imageSrc: "/assets/Bagels/bagels-assorted-primary.jpg",
+    imageAlt: "Assorted bagels",
     soldOut: false,
   },
 ] as const;

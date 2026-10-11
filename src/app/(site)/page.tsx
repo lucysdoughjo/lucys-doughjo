@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/button";
 import { DoughDropSteps } from "@/components/dough-drop-steps";
-import { ProductCard } from "@/components/product-card";
+import { FeaturedDropCard } from "@/components/featured-drop-card";
 import { SectionHeading } from "@/components/section-heading";
 import {
   getFeaturedProducts,
@@ -23,7 +23,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-16">
+      <section className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-14">
         <div>
           <h1 className="whitespace-pre-line font-serif text-4xl font-semibold leading-tight text-foreground sm:text-5xl lg:text-[2.75rem]">
             {content.heroHeadline}
@@ -74,16 +74,16 @@ export default async function HomePage() {
             {content.bakersNote}
           </p>
         ) : null} */}
-        <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-1 gap-1 bg-espresso/10 sm:grid-cols-2 lg:grid-cols-5 border-x border-espresso/10">
           {products.map((product) => (
-            <ProductCard
+            <FeaturedDropCard
               key={product.id}
               slug={product.slug || undefined}
               name={product.name}
-              priceLabel={product.priceLabel}
               description={product.description}
               imageSrc={product.imageUrl}
               imageAlt={product.imageAlt}
+              categorySlug={product.categorySlug}
               soldOut={product.soldOut}
             />
           ))}
@@ -117,7 +117,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+      <section className="mx-auto max-w-6xl px-4 py-8 lg:px-6 lg:py-14">
         <SectionHeading
           eyebrow="Find us"
           title="Find Lucy's Doughjo"
@@ -129,7 +129,7 @@ export default async function HomePage() {
               key={event.id}
               className="flex flex-col gap-1 border-b border-espresso/10 pb-4 sm:flex-row sm:gap-3"
             >
-              <span className="shrink-0 font-semibold text-foreground">
+              <span className="shrink-0 font-semibold text-primary">
                 {event.label}
               </span>
               <span>{event.summary}</span>

@@ -42,7 +42,8 @@ export const weeklyDrop = defineType({
       title: "Featured products (homepage)",
       type: "array",
       of: [{ type: "reference", to: [{ type: "product" }] }],
-      validation: (rule) => rule.max(4),
+      description:
+        "Products for this week’s drop. The homepage previews the first 5 in this order. The full shop menu is every product marked “Available this week” on each product.",
     }),
   ],
 });

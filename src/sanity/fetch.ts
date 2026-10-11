@@ -86,6 +86,7 @@ export type FeaturedProduct = {
   description: string;
   imageUrl: string;
   imageAlt: string;
+  categorySlug: string;
   purchaseOptions: PurchaseOption[];
   soldOut: boolean;
 };
@@ -162,6 +163,7 @@ type WeeklyDropRecord = {
     soldOut?: boolean;
     availableThisWeek?: boolean;
     image?: { asset?: unknown; alt?: string };
+    category?: { name?: string; slug?: string };
   }> | null;
 };
 
@@ -338,7 +340,7 @@ export const getFeaturedProducts = cache(async (): Promise<FeaturedProduct[]> =>
   const products = drop?.products;
 
   if (!Array.isArray(products) || products.length === 0) {
-    return placeholderFeaturedProducts.map((p) => {
+    return placeholderFeaturedProducts.slice(0, 5).map((p) => {
       const full = getPlaceholderProductBySlug(p.slug);
       return {
         id: p.name,
@@ -348,6 +350,7 @@ export const getFeaturedProducts = cache(async (): Promise<FeaturedProduct[]> =>
         description: p.description,
         imageUrl: p.imageSrc,
         imageAlt: p.imageAlt,
+        categorySlug: full?.categorySlug ?? "artisan-sourdough",
         purchaseOptions: full?.purchaseOptions ?? [],
         soldOut: p.soldOut,
       };
@@ -356,11 +359,13 @@ export const getFeaturedProducts = cache(async (): Promise<FeaturedProduct[]> =>
 
   return products
     .filter((p) => p?.availableThisWeek !== false && p?.name && p?.description)
-    .slice(0, 4)
+    .slice(0, 5)
     .map((p) => {
       const mapped = mapSanityProduct({
         ...p,
-        category: { name: "Menu", slug: "artisan-sourdough" },
+        category: p.category?.slug
+          ? { name: p.category.name ?? "Menu", slug: p.category.slug }
+          : { name: "Menu", slug: "artisan-sourdough" },
       });
       if (!mapped) return null;
 
@@ -372,6 +377,7 @@ export const getFeaturedProducts = cache(async (): Promise<FeaturedProduct[]> =>
         description: mapped.description,
         imageUrl: mapped.imageUrl,
         imageAlt: mapped.imageAlt,
+        categorySlug: mapped.categorySlug,
         purchaseOptions: mapped.purchaseOptions,
         soldOut: mapped.soldOut,
       };

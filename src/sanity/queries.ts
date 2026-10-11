@@ -22,6 +22,10 @@ export const latestWeeklyDropQuery = defineQuery(`
       image {
         asset,
         alt
+      },
+      "category": category-> {
+        name,
+        "slug": slug.current
       }
     }
   }
