@@ -8,7 +8,7 @@ export const categoryLeadImages: Record<
     alt: "Round artisan sourdough loaf",
   },
   bagels: {
-    src: "/assets/bagels/bagels-assorted-primary.jpg",
+    src: "/assets/Bagels/bagels-assorted-primary.jpg",
     alt: "Assorted bagels",
   },
   "english-muffins": {
