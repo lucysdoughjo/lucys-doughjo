@@ -37,6 +37,13 @@ const steps = [
   },
 ] as const;
 
+const stepIconColors = [
+  "text-primary",
+  "text-secondary",
+  "text-highlight",
+  "text-accent",
+] as const;
+
 export function DoughDropSteps() {
   return (
     <section className="border-y border-espresso/10 bg-cream py-14 sm:py-16">
@@ -48,9 +55,11 @@ export function DoughDropSteps() {
           Freshly baked in small batches. Worth the wait.
         </p>
         <ul className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map((step) => (
+          {steps.map((step, index) => (
             <li key={step.title} className="text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center text-primary">
+              <div
+                className={`mx-auto flex h-12 w-12 items-center justify-center ${stepIconColors[index]}`}
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="32"
