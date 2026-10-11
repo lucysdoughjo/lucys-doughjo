@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "seed:sanity": "node scripts/seed-sanity.mjs"
+    "seed:sanity": "node scripts/seed-sanity.mjs",
+    "sync:menu": "node scripts/sync-menu-sanity.mjs"
   },
   "dependencies": {
     "@sanity/image-url": "^2.1.1",

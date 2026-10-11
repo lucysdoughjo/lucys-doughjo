@@ -2,6 +2,11 @@ import { createClient } from "@sanity/client";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  menuCategories,
+  menuProducts,
+  toSanityProduct,
+} from "./menu-products.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
@@ -49,101 +54,8 @@ const client = createClient({
   useCdn: false,
 });
 
-const categories = [
-  { _id: "category-artisan-sourdough", name: "Artisan Sourdough", slug: "artisan-sourdough", sortOrder: 1 },
-  { _id: "category-bagels", name: "Bagels", slug: "bagels", sortOrder: 2 },
-  { _id: "category-english-muffins", name: "English Muffins", slug: "english-muffins", sortOrder: 3 },
-  { _id: "category-cinnamon-rolls", name: "Cinnamon Rolls", slug: "cinnamon-rolls", sortOrder: 4 },
-  { _id: "category-scones", name: "Scones", slug: "scones", sortOrder: 5 },
-  { _id: "category-jumbo-cookies", name: "Jumbo Cookies", slug: "jumbo-cookies", sortOrder: 6 },
-];
-
-const products = [
-  {
-    _id: "product-jalapeno-cheddar",
-    _type: "product",
-    name: "Jalapeño Cheddar",
-    slug: { _type: "slug", current: "jalapeno-cheddar" },
-    category: { _type: "reference", _ref: "category-artisan-sourdough" },
-    description: "Naturally leavened sourdough with a savory kick. Placeholder copy — confirm before launch.",
-    priceCents: 1600,
-    unitsPerItem: 1,
-    unitLabel: "each",
-    availableThisWeek: true,
-    soldOut: false,
-  },
-  {
-    _id: "product-original-sourdough",
-    _type: "product",
-    name: "Original Sourdough",
-    slug: { _type: "slug", current: "original-sourdough" },
-    category: { _type: "reference", _ref: "category-artisan-sourdough" },
-    description: "Classic hand-shaped loaf with a golden crust.",
-    priceCents: 1400,
-    unitsPerItem: 1,
-    unitLabel: "each",
-    availableThisWeek: true,
-    soldOut: false,
-  },
-  {
-    _id: "product-cinnamon-rolls",
-    _type: "product",
-    name: "Cinnamon Rolls",
-    slug: { _type: "slug", current: "cinnamon-rolls" },
-    category: { _type: "reference", _ref: "category-cinnamon-rolls" },
-    description: "Soft, glazed rolls baked for Sunday morning.",
-    priceCents: 700,
-    unitsPerItem: 1,
-    unitLabel: "each",
-    priceTiers: [{ quantity: 4, priceCents: 2500, label: "4 for $25" }],
-    availableThisWeek: true,
-    soldOut: false,
-  },
-  {
-    _id: "product-blueberry-scones",
-    _type: "product",
-    name: "Blueberry Scones",
-    slug: { _type: "slug", current: "blueberry-scones" },
-    category: { _type: "reference", _ref: "category-scones" },
-    description: "Buttery scones with visible blueberry pockets.",
-    priceCents: 400,
-    unitsPerItem: 1,
-    unitLabel: "each",
-    priceTiers: [{ quantity: 3, priceCents: 1000, label: "3 for $10" }],
-    availableThisWeek: true,
-    soldOut: false,
-  },
-  {
-    _id: "product-jumbo-cookie",
-    _type: "product",
-    name: "Jumbo Chocolate Chip Cookie",
-    slug: { _type: "slug", current: "jumbo-chocolate-chip" },
-    category: { _type: "reference", _ref: "category-jumbo-cookies" },
-    description: "Large bakery-style cookie with a soft center.",
-    priceCents: 300,
-    unitsPerItem: 1,
-    unitLabel: "each",
-    priceTiers: [
-      { quantity: 2, priceCents: 500, label: "2 for $5" },
-      { quantity: 12, priceCents: 2500, label: "Dozen for $25" },
-    ],
-    availableThisWeek: true,
-    soldOut: false,
-  },
-  {
-    _id: "product-bagels-original",
-    _type: "product",
-    name: "Original Bagels",
-    slug: { _type: "slug", current: "bagels-original" },
-    category: { _type: "reference", _ref: "category-bagels" },
-    description: "Small-batch bagels — sold as a 4-pack.",
-    priceCents: 1000,
-    unitsPerItem: 4,
-    unitLabel: "4-pack",
-    availableThisWeek: true,
-    soldOut: false,
-  },
-];
+const categories = menuCategories;
+const products = menuProducts.map(toSanityProduct);
 
 function mondayOfCurrentWeek() {
   const now = new Date();
