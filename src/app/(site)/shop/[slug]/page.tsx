@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductDetailForm } from "@/components/product-detail-form";
 import { ProductGallery } from "@/components/product-gallery";
+import { pageMetadata } from "@/lib/seo";
 import { getOrderWindowForSite } from "@/sanity/fetch";
 import { getAllProductSlugs, getProductBySlug } from "@/sanity/shop-fetch";
 
@@ -24,13 +25,27 @@ export async function generateMetadata({
   const product = await getProductBySlug(slug);
 
   if (!product) {
-    return { title: "Product not found · Lucy's Doughjo" };
+    return pageMetadata({
+      title: "Product not found",
+      description: "This item is not on the menu this week at Lucy's Doughjo.",
+      path: `/shop/${slug}`,
+    });
   }
 
-  return {
-    title: `${product.name} · Lucy's Doughjo`,
+  const ogImage = product.imageUrl?.trim() || null;
+
+  return pageMetadata({
+    title: product.name,
     description: product.description,
-  };
+    keywords: [
+      product.name,
+      "Lucy's Doughjo",
+      "Sunday Dough Drop",
+      "preorder bakery",
+    ],
+    path: `/shop/${slug}`,
+    ogImage,
+  });
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {

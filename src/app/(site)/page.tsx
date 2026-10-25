@@ -1,28 +1,45 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/button";
+import { LocalBusinessJsonLd } from "@/components/local-business-json-ld";
 import { DoughDropSteps } from "@/components/dough-drop-steps";
 import { FeaturedDropCard } from "@/components/featured-drop-card";
 import { SectionHeading } from "@/components/section-heading";
+import { pageMetadata } from "@/lib/seo";
 import {
   getFeaturedProducts,
   getHomePageContent,
+  getSiteContactSettings,
   getUpcomingEvents,
 } from "@/sanity/fetch";
+
+export const metadata = pageMetadata({
+  path: "/",
+  keywords: [
+    "Lucy's Doughjo",
+    "Chino bakery",
+    "Sunday Dough Drop",
+    "sourdough bread",
+    "preorder bakery",
+    "artisan baked goods",
+  ],
+});
 
 function isSanityImageUrl(src: string) {
   return src.startsWith("https://cdn.sanity.io/");
 }
 
 export default async function HomePage() {
-  const [content, products, events] = await Promise.all([
+  const [content, products, events, contact] = await Promise.all([
     getHomePageContent(),
     getFeaturedProducts(),
     getUpcomingEvents(),
+    getSiteContactSettings(),
   ]);
 
   return (
     <>
+      <LocalBusinessJsonLd contactEmail={contact.contactEmail} />
       <section className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-14">
         <div>
           <h1 className="whitespace-pre-line font-serif text-4xl font-semibold leading-tight text-foreground sm:text-5xl lg:text-[2.75rem]">

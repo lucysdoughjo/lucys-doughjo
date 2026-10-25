@@ -1,15 +1,23 @@
 import type { Metadata } from "next";
 import { SectionHeading } from "@/components/section-heading";
+import { pageMetadata } from "@/lib/seo";
 import { ShopDisplaySectionBlock } from "@/components/shop-display-section";
 import { buildShopDisplaySections } from "@/lib/shop-sections";
 import { getOrderWindowForSite } from "@/sanity/fetch";
 import { getShopMenu } from "@/sanity/shop-fetch";
 
-export const metadata: Metadata = {
-  title: "Shop · Lucy's Doughjo",
+export const metadata: Metadata = pageMetadata({
+  title: "Shop",
   description:
-    "This week's Sunday Dough Drop — preorder small-batch sourdough and baked treats for pickup or delivery.",
-};
+    "This week's Sunday Dough Drop — preorder small-batch sourdough and baked treats for Sunday pickup or local delivery in Chino, CA.",
+  keywords: [
+    "Sunday Dough Drop",
+    "preorder bakery",
+    "sourdough Chino",
+    "weekly bakery menu",
+  ],
+  path: "/shop",
+});
 
 export default async function ShopPage() {
   const [menu, orderWindow] = await Promise.all([

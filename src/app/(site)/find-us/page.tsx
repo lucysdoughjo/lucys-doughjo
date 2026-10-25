@@ -1,10 +1,21 @@
 import Image from "next/image";
 import { SectionHeading } from "@/components/section-heading";
+import { pageMetadata } from "@/lib/seo";
 import { getAllUpcomingEvents, getHomePageContent } from "@/sanity/fetch";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Find Us",
-};
+  description:
+    "Find Lucy's Doughjo at farmers markets and pop-ups in Chino and nearby. Sunday Dough Drop pickup and delivery are separate from market dates.",
+  keywords: [
+    "Lucy's Doughjo markets",
+    "Chino farmers market bakery",
+    "bakery pop-up",
+    "find local bakery",
+  ],
+  path: "/find-us",
+  ogImage: "/assets/markets_popups/market-pop-up-current.jpg",
+});
 
 export default async function FindUsPage() {
   const [events, home] = await Promise.all([

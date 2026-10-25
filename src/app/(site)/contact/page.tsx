@@ -1,11 +1,21 @@
 import { ContactForm } from "@/components/contact-form";
 import { FaqList } from "@/components/faq-list";
 import { SectionHeading } from "@/components/section-heading";
+import { pageMetadata } from "@/lib/seo";
 import { getFaqItems, getSiteContactSettings } from "@/sanity/fetch";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Contact",
-};
+  description:
+    "Questions about orders, allergens, or the Sunday Dough Drop? Contact Lucy's Doughjo in Chino, CA — FAQ and message form.",
+  keywords: [
+    "contact Lucy's Doughjo",
+    "bakery questions",
+    "allergen information",
+    "Chino bakery contact",
+  ],
+  path: "/contact",
+});
 
 export default async function ContactPage() {
   const [faqItems, contact] = await Promise.all([

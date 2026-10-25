@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
 import {
   Allura,
   Cormorant_Garamond,
   Montserrat,
 } from "next/font/google";
 import "./globals.css";
+import { rootMetadata } from "@/lib/seo";
 
 const cormorantGaramond = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -24,14 +24,7 @@ const allura = Allura({
   weight: ["400"],
 });
 
-export const metadata: Metadata = {
-  title: "Lucy's Doughjo",
-  description: "Microbakery in Chino, CA — where joy meets the dough.",
-  icons: {
-    icon: "/assets/icons/wheat-icon.png",
-    apple: "/assets/icons/wheat-icon.png",
-  },
-};
+export const metadata = rootMetadata;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
