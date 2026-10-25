@@ -12,9 +12,11 @@
     "lint": "eslint",
     "test": "vitest run",
     "seed:sanity": "node scripts/seed-sanity.mjs",
-    "sync:menu": "node scripts/sync-menu-sanity.mjs"
+    "sync:menu": "node scripts/sync-menu-sanity.mjs",
+    "email": "email dev --dir emails --port 3001"
   },
   "dependencies": {
+    "@react-email/components": "^0.5.7",
     "@sanity/image-url": "^2.1.1",
     "@sanity/vision": "^6.10.1",
     "date-fns": "^4.4.0",
@@ -23,11 +25,13 @@
     "next-sanity": "^13.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-email": "^4.3.2",
     "resend": "^6.32.0",
     "sanity": "^6.17.0",
     "styled-components": "^6.5.3"
   },
   "devDependencies": {
+    "@react-email/preview-server": "^4.3.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
