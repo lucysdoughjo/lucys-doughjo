@@ -1,4 +1,5 @@
 import { ProductCard } from "@/components/product-card";
+import { remainingStockLabel } from "@/lib/inventory";
 import type { ShopDisplaySection } from "@/lib/shop-sections";
 
 type ShopDisplaySectionProps = {
@@ -27,6 +28,7 @@ export function ShopDisplaySectionBlock({ section }: ShopDisplaySectionProps) {
               imageSrc={product.imageUrl}
               imageAlt={product.imageAlt}
               soldOut={product.soldOut}
+              remainingLabel={remainingStockLabel(product.unitsRemaining)}
               variant="shop"
             />
           ))}

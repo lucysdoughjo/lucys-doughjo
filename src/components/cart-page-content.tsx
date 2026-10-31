@@ -156,7 +156,7 @@ export function CartPageContent({ orderWindow }: CartPageContentProps) {
       <SectionHeading
         eyebrow="Cart"
         title="Your order"
-        description="Pack quantities match what you chose on each product page — not individual pieces."
+        description="Pack quantities match what you chose on each product page, not individual pieces."
       />
 
       {checkoutHint ? (
@@ -275,19 +275,19 @@ export function CartPageContent({ orderWindow }: CartPageContentProps) {
         })}
       </ul>
 
-      <div className="mt-8 flex flex-col items-start gap-4 border-t border-espresso/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <div className="mt-4 flex flex-col items-start gap-4 pt-2 lg:pt-4">
+        <div className="sm:ml-auto">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-foreground/60">
             Subtotal
           </p>
-          <p className="mt-1 font-serif text-2xl font-semibold text-foreground">
+          <p className="mt-1 text-2xl font-semibold text-foreground">
             {formatPrice(subtotalCents)}
           </p>
-          <p className="mt-1 text-xs text-foreground/55">
+          <p className="mt-1 text-xs text-foreground/80">
             Delivery and tax at checkout
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 sm:ml-auto">
           <Button href="/shop" variant="secondary">
             Keep shopping
           </Button>

@@ -155,6 +155,22 @@ export const product = defineType({
       description: "Leave empty to manage sold-out manually in Studio.",
     }),
     defineField({
+      name: "unitsSoldThisWeek",
+      title: "Units sold this week",
+      type: "number",
+      initialValue: 0,
+      readOnly: true,
+      description: "Updated automatically when orders are paid. Counts baked units.",
+    }),
+    defineField({
+      name: "unitsReservedThisWeek",
+      title: "Units reserved (pending checkout)",
+      type: "number",
+      initialValue: 0,
+      readOnly: true,
+      description: "Held while checkout is in progress. Released if payment fails.",
+    }),
+    defineField({
       name: "soldOut",
       title: "Sold out",
       type: "boolean",

@@ -1,4 +1,5 @@
 import { getCategoryLeadImage } from "@/lib/category-images";
+import { isEffectivelySoldOut, remainingUnits } from "@/lib/inventory";
 import {
   buildPurchaseOptions,
   formatPriceLabel,
@@ -61,6 +62,9 @@ export function mapSanityProduct(record: {
   unitLabel?: string | null;
   priceTiers?: PriceTier[] | null;
   soldOut?: boolean;
+  weeklyLimit?: number | null;
+  unitsSoldThisWeek?: number | null;
+  unitsReservedThisWeek?: number | null;
   availableThisWeek?: boolean;
   allergens?: string | null;
   image?: SanityImage;
@@ -93,6 +97,15 @@ export function mapSanityProduct(record: {
     unitLabel,
     priceTiers,
   });
+  const weeklyLimit =
+    typeof record.weeklyLimit === "number" && record.weeklyLimit > 0
+      ? record.weeklyLimit
+      : null;
+  const unitsRemaining = remainingUnits({
+    weeklyLimit,
+    unitsSoldThisWeek: record.unitsSoldThisWeek,
+    unitsReservedThisWeek: record.unitsReservedThisWeek,
+  });
 
   return {
     id: record._id || record.slug,
@@ -115,8 +128,10 @@ export function mapSanityProduct(record: {
     gallery,
     categorySlug,
     categoryName: record.category?.name ?? "Menu",
-    soldOut: Boolean(record.soldOut),
+    soldOut: isEffectivelySoldOut(Boolean(record.soldOut), unitsRemaining),
     availableThisWeek: record.availableThisWeek !== false,
     allergens: record.allergens ?? null,
+    weeklyLimit,
+    unitsRemaining,
   };
 }

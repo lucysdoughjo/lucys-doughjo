@@ -1,5 +1,7 @@
 import type { CartLine } from "@/lib/cart-types";
+import { isEffectivelySoldOut } from "@/lib/inventory";
 import type { PurchaseOption } from "@/lib/pricing";
+import { unitsFromLine } from "@/lib/pricing";
 import type { OrderWindowState } from "@/lib/order-window";
 import { getOrderWindowForSite } from "@/sanity/fetch";
 import { getProductsBySlugs } from "@/sanity/shop-fetch";
@@ -93,6 +95,10 @@ export function validateLineAgainstProduct(
     option.label !== line.optionLabel ||
     option.id !== line.optionId;
 
+  const units = unitsFromLine(option.tierQuantity, line.packs);
+  const overLimit =
+    product.unitsRemaining !== null && units > product.unitsRemaining;
+
   return {
     productId: product.id,
     slug: product.slug,
@@ -104,7 +110,7 @@ export function validateLineAgainstProduct(
     tierPriceCents: option.tierPriceCents,
     packs: line.packs,
     unavailable: false,
-    soldOut: product.soldOut,
+    soldOut: isEffectivelySoldOut(product.soldOut, product.unitsRemaining) || overLimit,
     priceChanged,
   };
 }
@@ -113,9 +119,28 @@ export function validateCartLinesWithProducts(
   lines: CartLine[],
   productsBySlug: Map<string, ShopProduct>,
 ): ValidatedCartLine[] {
-  return lines.map((line) =>
-    validateLineAgainstProduct(line, productsBySlug.get(line.slug)),
-  );
+  const usedUnitsBySlug = new Map<string, number>();
+
+  return lines.map((line) => {
+    const product = productsBySlug.get(line.slug);
+    const result = validateLineAgainstProduct(line, product);
+    if (!product || result.unavailable) {
+      return result;
+    }
+
+    const units = unitsFromLine(result.tierQuantity, result.packs);
+    const alreadyUsed = usedUnitsBySlug.get(line.slug) ?? 0;
+    usedUnitsBySlug.set(line.slug, alreadyUsed + units);
+
+    if (
+      product.unitsRemaining !== null &&
+      alreadyUsed + units > product.unitsRemaining
+    ) {
+      return { ...result, soldOut: true };
+    }
+
+    return result;
+  });
 }
 
 export function cartHasCheckoutBlockers(lines: ValidatedCartLine[]) {

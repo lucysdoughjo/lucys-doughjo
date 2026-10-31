@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductDetailForm } from "@/components/product-detail-form";
 import { ProductGallery } from "@/components/product-gallery";
+import { remainingStockLabel } from "@/lib/inventory";
 import { pageMetadata } from "@/lib/seo";
 import { getOrderWindowForSite } from "@/sanity/fetch";
 import { getAllProductSlugs, getProductBySlug } from "@/sanity/shop-fetch";
@@ -95,6 +96,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
           ) : null}
 
           <p className="mt-4 text-sm text-foreground/70">{orderWindow.label}</p>
+          {product.soldOut ? (
+            <p className="mt-2 text-sm font-medium text-accent">
+              Sold out for this week&apos;s drop.
+            </p>
+          ) : remainingStockLabel(product.unitsRemaining) ? (
+            <p className="mt-2 text-sm font-medium text-foreground/80">
+              {remainingStockLabel(product.unitsRemaining)}
+            </p>
+          ) : null}
 
           <ProductDetailForm
             productId={product.id}
@@ -104,6 +114,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             purchaseOptions={product.purchaseOptions}
             soldOut={product.soldOut}
             orderingDisabled={orderingDisabled}
+            unitsRemaining={product.unitsRemaining}
           />
         </div>
       </div>

@@ -23,6 +23,8 @@ type RawProduct = {
   soldOut: boolean;
   availableThisWeek: boolean;
   allergens: string | null;
+  weeklyLimit?: number | null;
+  unitsRemaining?: number | null;
 };
 
 function enrichProduct(raw: RawProduct): ShopProduct {
@@ -32,6 +34,8 @@ function enrichProduct(raw: RawProduct): ShopProduct {
 
   return {
     ...raw,
+    weeklyLimit: raw.weeklyLimit ?? null,
+    unitsRemaining: raw.unitsRemaining ?? null,
     unitsPerItem,
     unitLabel,
     priceTiers,

@@ -10,6 +10,7 @@ export type ProductCardProps = {
   imageSrc: string;
   imageAlt: string;
   soldOut?: boolean;
+  remainingLabel?: string | null;
   variant?: "default" | "shop";
   showDescription?: boolean;
 };
@@ -22,6 +23,7 @@ export function ProductCard({
   imageSrc,
   imageAlt,
   soldOut = false,
+  remainingLabel = null,
   variant = "default",
   showDescription = true,
 }: ProductCardProps) {
@@ -44,6 +46,10 @@ export function ProductCard({
       {soldOut ? (
         <span className="absolute left-3 top-3 rounded-sm bg-accent px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-cream">
           Sold out
+        </span>
+      ) : remainingLabel ? (
+        <span className="absolute left-3 top-3 rounded-sm bg-cream/95 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground">
+          {remainingLabel}
         </span>
       ) : null}
     </div>

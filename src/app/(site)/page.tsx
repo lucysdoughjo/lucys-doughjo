@@ -5,6 +5,7 @@ import { LocalBusinessJsonLd } from "@/components/local-business-json-ld";
 import { DoughDropSteps } from "@/components/dough-drop-steps";
 import { FeaturedDropCard } from "@/components/featured-drop-card";
 import { SectionHeading } from "@/components/section-heading";
+import { remainingStockLabel } from "@/lib/inventory";
 import { pageMetadata } from "@/lib/seo";
 import {
   getFeaturedProducts,
@@ -102,6 +103,7 @@ export default async function HomePage() {
               imageAlt={product.imageAlt}
               categorySlug={product.categorySlug}
               soldOut={product.soldOut}
+              remainingLabel={remainingStockLabel(product.unitsRemaining)}
             />
           ))}
         </div>

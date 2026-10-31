@@ -66,8 +66,8 @@ export default function OrderCustomerEmail({
                 {item.name}
                 {item.optionLabel ? ` · ${item.optionLabel}` : ""}
               </Text>
-              <Text style={{ ...mutedTextStyle, margin: "4px 0 0" }}>
-                Qty {item.quantity}
+              <Text style={{ ...mutedTextStyle, margin: "4px 0 0", fontSize: "15px" }}>
+                Quantity: {item.quantity}
               </Text>
             </Column>
             <Column align="right" style={{ width: "30%" }}>

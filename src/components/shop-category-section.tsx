@@ -1,4 +1,5 @@
 import { ProductCard } from "@/components/product-card";
+import { remainingStockLabel } from "@/lib/inventory";
 import type { ShopCategory } from "@/sanity/shop-types";
 
 type ShopCategorySectionProps = {
@@ -28,6 +29,7 @@ export function ShopCategorySection({ category }: ShopCategorySectionProps) {
               imageSrc={product.imageUrl}
               imageAlt={product.imageAlt}
               soldOut={product.soldOut}
+              remainingLabel={remainingStockLabel(product.unitsRemaining)}
             />
           ))}
         </div>

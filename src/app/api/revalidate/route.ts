@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 import { parseBody } from "next-sanity/webhook";
 
-const paths = ["/", "/shop", "/about", "/find-us", "/contact"];
+const paths = ["/", "/shop", "/about", "/find-us", "/contact", "/checkout"];
 
 export async function POST(request: NextRequest) {
   const secret = process.env.SANITY_REVALIDATE_SECRET;

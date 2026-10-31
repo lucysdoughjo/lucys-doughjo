@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { Button } from "@/components/button";
+import { useCart } from "@/components/cart-provider";
 import {
   computeLineTotalCents,
   formatPrice,
@@ -17,6 +19,7 @@ type ProductDetailFormProps = {
   purchaseOptions: PurchaseOption[];
   soldOut: boolean;
   orderingDisabled: boolean;
+  unitsRemaining?: number | null;
 };
 
 export function ProductDetailForm({
@@ -27,11 +30,24 @@ export function ProductDetailForm({
   purchaseOptions,
   soldOut,
   orderingDisabled,
+  unitsRemaining = null,
 }: ProductDetailFormProps) {
+  const { hydrated, lines } = useCart();
   const [selectedOptionId, setSelectedOptionId] = useState(
     purchaseOptions[0]?.id ?? "",
   );
   const [packs, setPacks] = useState(1);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const line = lines.find(
+      (entry) =>
+        entry.productId === productId && entry.optionId === selectedOptionId,
+    );
+    setPacks(line?.packs ?? 1);
+    // Sync only after hydration and when the selected pack changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid resetting while the user edits quantity
+  }, [hydrated, productId, selectedOptionId]);
 
   const selectedOption = useMemo(
     () =>
@@ -43,6 +59,16 @@ export function ProductDetailForm({
   if (!selectedOption) {
     return null;
   }
+
+  const maxPacks =
+    unitsRemaining === null
+      ? 99
+      : Math.max(
+          0,
+          Math.floor(unitsRemaining / selectedOption.tierQuantity),
+        );
+  const optionUnavailable = maxPacks === 0;
+  const cannotOrder = soldOut || orderingDisabled || optionUnavailable;
 
   const lineTotalCents = computeLineTotalCents(
     selectedOption.tierPriceCents,
@@ -67,11 +93,20 @@ export function ProductDetailForm({
                     value={option.id}
                     checked={selectedOption.id === option.id}
                     onChange={() => setSelectedOptionId(option.id)}
-                    disabled={soldOut || orderingDisabled}
+                    disabled={
+                      soldOut ||
+                      orderingDisabled ||
+                      (unitsRemaining !== null &&
+                        unitsRemaining < option.tierQuantity)
+                    }
                     className="accent-primary"
                   />
                   <span className="text-sm font-medium text-foreground">
                     {option.label}
+                    {unitsRemaining !== null &&
+                    unitsRemaining < option.tierQuantity
+                      ? " — not enough left"
+                      : ""}
                   </span>
                 </label>
               </li>
@@ -91,7 +126,7 @@ export function ProductDetailForm({
           <button
             type="button"
             className="flex h-10 w-10 items-center justify-center rounded-sm border border-espresso/20 text-lg disabled:opacity-40"
-            disabled={packs <= 1 || soldOut || orderingDisabled}
+            disabled={packs <= 1 || cannotOrder}
             onClick={() => setPacks((value) => Math.max(1, value - 1))}
             aria-label="Decrease quantity"
           >
@@ -101,24 +136,26 @@ export function ProductDetailForm({
             id="quantity"
             type="number"
             min={1}
-            max={99}
+            max={Math.max(1, maxPacks)}
             value={packs}
             onChange={(event) =>
               setPacks(
                 Math.min(
-                  99,
+                  Math.max(1, maxPacks),
                   Math.max(1, Math.floor(Number(event.target.value) || 1)),
                 ),
               )
             }
-            className="h-10 w-16 rounded-sm border border-espresso/20 bg-cream text-center text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            disabled={soldOut || orderingDisabled}
+            className="h-10 w-16 rounded-sm border border-espresso/20 bg-white text-center text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            disabled={cannotOrder}
           />
           <button
             type="button"
             className="flex h-10 w-10 items-center justify-center rounded-sm border border-espresso/20 text-lg disabled:opacity-40"
-            disabled={soldOut || orderingDisabled}
-            onClick={() => setPacks((value) => Math.min(99, value + 1))}
+            disabled={cannotOrder || packs >= Math.max(1, maxPacks)}
+            onClick={() =>
+              setPacks((value) => Math.min(Math.max(1, maxPacks), value + 1))
+            }
             aria-label="Increase quantity"
           >
             +
@@ -135,17 +172,28 @@ export function ProductDetailForm({
         </span>
       </p>
 
-      <AddToCartButton
-        productId={productId}
-        slug={slug}
-        productName={productName}
-        imageUrl={imageUrl}
-        soldOut={soldOut}
-        orderingDisabled={orderingDisabled}
-        purchaseOption={selectedOption}
-        packs={packs}
-        className="w-full sm:w-auto"
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <AddToCartButton
+          productId={productId}
+          slug={slug}
+          productName={productName}
+          imageUrl={imageUrl}
+          soldOut={soldOut || optionUnavailable}
+          orderingDisabled={orderingDisabled}
+          purchaseOption={selectedOption}
+          packs={packs}
+          className="w-full sm:w-auto"
+        />
+        {hydrated && lines.length > 0 ? (
+          <Button href="/checkout" variant="secondary" className="w-full sm:w-auto">
+            Checkout →
+          </Button>
+        ) : (
+          <Button variant="secondary" disabled className="w-full sm:w-auto">
+            Checkout →
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

@@ -31,13 +31,14 @@ export async function sendOrderEmails({
 
   const from = getFromEmailAddress();
   const items = cartLinesToEmailItems(payload.items);
-  const { fulfillmentLabel, fulfillmentDetails } = buildFulfillmentCopy(payload);
+  const customerFulfillment = buildFulfillmentCopy(payload);
+  const ownerFulfillment = buildFulfillmentCopy(payload, {
+    omitFulfillmentNotes: true,
+  });
   const idempotencyBase = `order/${payload.orderNumber}`;
 
   const sharedProps = {
     orderNumber: payload.orderNumber,
-    fulfillmentLabel,
-    fulfillmentDetails,
     fulfillmentDateLabel: payload.fulfillmentDateLabel,
     items,
     subtotalCents: payload.subtotalCents,
@@ -54,6 +55,7 @@ export async function sendOrderEmails({
       subject: `Order ${payload.orderNumber} confirmed — Lucy's Doughjo`,
       react: OrderCustomerEmail({
         ...sharedProps,
+        ...customerFulfillment,
         customerName: payload.customer.name,
       }),
     },
@@ -75,6 +77,7 @@ export async function sendOrderEmails({
       subject: `New order ${payload.orderNumber} — ${payload.customer.name}`,
       react: OrderOwnerEmail({
         ...sharedProps,
+        ...ownerFulfillment,
         customerName: payload.customer.name,
         customerEmail: payload.customer.email,
         customerPhone: payload.customer.phone,

@@ -17,8 +17,11 @@
   },
   "dependencies": {
     "@react-email/components": "^0.5.7",
+    "@react-email/render": "^1.4.0",
     "@sanity/image-url": "^2.1.1",
     "@sanity/vision": "^6.10.1",
+    "@stripe/react-stripe-js": "^7.0.0",
+    "@stripe/stripe-js": "^10.1.0",
     "date-fns": "^4.4.0",
     "date-fns-tz": "^3.2.0",
     "next": "16.3.8",
@@ -28,6 +31,7 @@
     "react-email": "^4.3.2",
     "resend": "^6.32.0",
     "sanity": "^6.17.0",
+    "stripe": "^23.0.1",
     "styled-components": "^6.5.3"
   },
   "devDependencies": {

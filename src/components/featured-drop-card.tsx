@@ -10,6 +10,7 @@ export type FeaturedDropCardProps = {
   imageAlt: string;
   categorySlug?: string;
   soldOut?: boolean;
+  remainingLabel?: string | null;
 };
 
 export function FeaturedDropCard({
@@ -20,6 +21,7 @@ export function FeaturedDropCard({
   imageAlt,
   categorySlug,
   soldOut = false,
+  remainingLabel = null,
 }: FeaturedDropCardProps) {
   const card = (
     <>
@@ -36,6 +38,10 @@ export function FeaturedDropCard({
         {soldOut ? (
           <span className="absolute left-3 top-3 rounded-sm bg-accent px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-cream">
             Sold out
+          </span>
+        ) : remainingLabel ? (
+          <span className="absolute left-3 top-3 rounded-sm bg-cream/95 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground">
+            {remainingLabel}
           </span>
         ) : null}
       </div>

@@ -58,7 +58,7 @@ export default function OrderOwnerEmail({
           <strong>Phone:</strong> {customerPhone}
         </Text>
         <Text style={{ ...textStyle, marginBottom: "8px" }}>
-          <strong>{fulfillmentLabel}</strong>
+          <strong>Fulfillment:</strong> {fulfillmentLabel}
         </Text>
         <Text style={{ ...textStyle, marginBottom: 0, whiteSpace: "pre-wrap" }}>
           {fulfillmentDetails}
@@ -72,8 +72,8 @@ export default function OrderOwnerEmail({
                 {item.name}
                 {item.optionLabel ? ` · ${item.optionLabel}` : ""}
               </Text>
-              <Text style={{ ...mutedTextStyle, margin: "4px 0 0" }}>
-                Qty {item.quantity}
+              <Text style={{ ...mutedTextStyle, margin: "4px 0 0", fontSize: "15px" }}>
+                Quantity: {item.quantity}
               </Text>
             </Column>
             <Column align="right" style={{ width: "30%" }}>

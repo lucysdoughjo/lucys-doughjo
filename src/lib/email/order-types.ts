@@ -33,7 +33,10 @@ export function cartLinesToEmailItems(lines: CartLine[]): OrderEmailLineItem[] {
   }));
 }
 
-export function buildFulfillmentCopy(payload: OrderEmailPayload): {
+export function buildFulfillmentCopy(
+  payload: OrderEmailPayload,
+  options?: { omitFulfillmentNotes?: boolean },
+): {
   fulfillmentLabel: string;
   fulfillmentDetails: string;
 } {
@@ -41,7 +44,7 @@ export function buildFulfillmentCopy(payload: OrderEmailPayload): {
     payload.fulfillment === "delivery" ? "Sunday delivery" : "Sunday pickup";
 
   const parts = [payload.fulfillmentAddress.trim()];
-  if (payload.fulfillmentInstructions?.trim()) {
+  if (!options?.omitFulfillmentNotes && payload.fulfillmentInstructions?.trim()) {
     parts.push(payload.fulfillmentInstructions.trim());
   }
 

@@ -15,6 +15,7 @@ export const structure: StructureResolver = (S) =>
       singleton(S, "aboutPage", "About page"),
       S.divider(),
       S.documentTypeListItem("weeklyDrop").title("Weekly drops"),
+      S.documentTypeListItem("order").title("Orders"),
       S.documentTypeListItem("product").title("Products"),
       S.documentTypeListItem("category").title("Categories"),
       S.documentTypeListItem("event").title("Markets & pop-ups"),

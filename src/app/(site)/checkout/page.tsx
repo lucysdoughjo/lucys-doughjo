@@ -1,5 +1,8 @@
 import { CheckoutPageContent } from "@/components/checkout-page-content";
+import { getNextSundayPacificLabel } from "@/lib/checkout/sunday-label";
 import { pageMetadata } from "@/lib/seo";
+import { getSiteFulfillmentSettings } from "@/sanity/checkout-fetch";
+import { getOrderWindowForSite } from "@/sanity/fetch";
 
 export const metadata = pageMetadata({
   title: "Checkout",
@@ -8,6 +11,17 @@ export const metadata = pageMetadata({
   robots: { index: false, follow: false },
 });
 
-export default function CheckoutPage() {
-  return <CheckoutPageContent />;
+export default async function CheckoutPage() {
+  const [orderWindow, fulfillmentSettings] = await Promise.all([
+    getOrderWindowForSite(),
+    getSiteFulfillmentSettings(),
+  ]);
+
+  return (
+    <CheckoutPageContent
+      orderWindow={orderWindow}
+      fulfillmentSettings={fulfillmentSettings}
+      sundayLabel={getNextSundayPacificLabel()}
+    />
+  );
 }

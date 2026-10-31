@@ -2,6 +2,7 @@ import { defineQuery } from "next-sanity";
 
 export const latestWeeklyDropQuery = defineQuery(`
   *[_type == "weeklyDrop"] | order(weekStart desc)[0] {
+    weekStart,
     status,
     bakersNote,
     "products": featuredProducts[]-> {
@@ -17,6 +18,9 @@ export const latestWeeklyDropQuery = defineQuery(`
         priceCents,
         label
       },
+      weeklyLimit,
+      unitsSoldThisWeek,
+      unitsReservedThisWeek,
       soldOut,
       availableThisWeek,
       image {
@@ -112,6 +116,9 @@ export const shopMenuQuery = defineQuery(`
         priceCents,
         label
       },
+      weeklyLimit,
+      unitsSoldThisWeek,
+      unitsReservedThisWeek,
       soldOut,
       availableThisWeek,
       allergens,
@@ -134,6 +141,7 @@ export const shopMenuQuery = defineQuery(`
 export const productsBySlugsQuery = defineQuery(`
   *[_type == "product" && slug.current in $slugs] {
     _id,
+    _rev,
     name,
     "slug": slug.current,
     description,
@@ -145,6 +153,9 @@ export const productsBySlugsQuery = defineQuery(`
       priceCents,
       label
     },
+    weeklyLimit,
+    unitsSoldThisWeek,
+    unitsReservedThisWeek,
     soldOut,
     availableThisWeek,
     allergens,
@@ -177,6 +188,9 @@ export const productBySlugQuery = defineQuery(`
       priceCents,
       label
     },
+    weeklyLimit,
+    unitsSoldThisWeek,
+    unitsReservedThisWeek,
     soldOut,
     availableThisWeek,
     allergens,
@@ -207,6 +221,37 @@ export const faqItemsQuery = defineQuery(`
     question,
     answer,
     order
+  }
+`);
+
+export const stalePendingOrdersQuery = defineQuery(`
+  *[_type == "order" && status == "pending" && _createdAt < $cutoff] {
+    _id,
+    stripePaymentIntentId,
+    reservationUnits
+  }
+`);
+
+export const orderByPaymentIntentQuery = defineQuery(`
+  *[_type == "order" && stripePaymentIntentId == $paymentIntentId][0] {
+    _id,
+    orderNumber,
+    status,
+    weekStart,
+    customerName,
+    customerEmail,
+    customerPhone,
+    fulfillment,
+    fulfillmentAddress,
+    fulfillmentInstructions,
+    orderNotes,
+    items,
+    subtotalCents,
+    deliveryFeeCents,
+    totalCents,
+    stripePaymentIntentId,
+    emailsSentAt,
+    reservationUnits
   }
 `);
 

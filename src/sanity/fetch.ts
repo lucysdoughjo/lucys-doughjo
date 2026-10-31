@@ -89,6 +89,7 @@ export type FeaturedProduct = {
   categorySlug: string;
   purchaseOptions: PurchaseOption[];
   soldOut: boolean;
+  unitsRemaining: number | null;
 };
 
 export type HomePageContent = {
@@ -353,6 +354,7 @@ export const getFeaturedProducts = cache(async (): Promise<FeaturedProduct[]> =>
         categorySlug: full?.categorySlug ?? "artisan-sourdough",
         purchaseOptions: full?.purchaseOptions ?? [],
         soldOut: p.soldOut,
+        unitsRemaining: full?.unitsRemaining ?? null,
       };
     });
   }
@@ -380,6 +382,7 @@ export const getFeaturedProducts = cache(async (): Promise<FeaturedProduct[]> =>
         categorySlug: mapped.categorySlug,
         purchaseOptions: mapped.purchaseOptions,
         soldOut: mapped.soldOut,
+        unitsRemaining: mapped.unitsRemaining,
       };
     })
     .filter((p): p is FeaturedProduct => p !== null);
