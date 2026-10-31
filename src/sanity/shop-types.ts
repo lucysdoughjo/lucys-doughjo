@@ -24,6 +24,14 @@ export type ShopProduct = {
   soldOut: boolean;
   availableThisWeek: boolean;
   allergens: string | null;
+  weeklyLimit: number | null;
+  unitsRemaining: number | null;
+};
+
+export type CheckoutProduct = ShopProduct & {
+  revision: string | null;
+  unitsSoldThisWeek: number;
+  unitsReservedThisWeek: number;
 };
 
 export type ShopCategory = {

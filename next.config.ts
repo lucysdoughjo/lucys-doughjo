@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["@react-email/render"],
   images: {
     remotePatterns: [
       {
@@ -8,6 +9,14 @@ const nextConfig: NextConfig = {
         hostname: "cdn.sanity.io",
       },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: "/order/success",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
+    ];
   },
 };
 

@@ -35,6 +35,8 @@ function makeProduct(overrides: Partial<ShopProduct> = {}): ShopProduct {
     soldOut: false,
     availableThisWeek: true,
     allergens: null,
+    weeklyLimit: null,
+    unitsRemaining: null,
     ...overrides,
   };
 }
@@ -120,5 +122,21 @@ describe("validateCartLinesWithProducts", () => {
     const results = validateCartLinesWithProducts([baseLine], map);
     expect(results).toHaveLength(1);
     expect(results[0].tierPriceCents).toBe(1600);
+  });
+
+  it("blocks checkout when cart units exceed remaining weekly stock", () => {
+    const product = makeProduct({ weeklyLimit: 4, unitsRemaining: 4 });
+    const map = new Map([[product.slug, product]]);
+    const results = validateCartLinesWithProducts(
+      [
+        { ...baseLine, packs: 1 },
+        { ...baseLine, optionId: "4-1600-b", packs: 1 },
+      ],
+      map,
+    );
+
+    expect(results[0].soldOut).toBe(false);
+    expect(results[1].soldOut).toBe(true);
+    expect(cartHasCheckoutBlockers(results)).toBe(true);
   });
 });

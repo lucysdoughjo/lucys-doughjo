@@ -155,6 +155,29 @@ export const product = defineType({
       description: "Leave empty to manage sold-out manually in Studio.",
     }),
     defineField({
+      name: "unitsSoldThisWeek",
+      title: "Units sold this week",
+      type: "number",
+      initialValue: 0,
+      description:
+        "Updated when orders are paid. Reset automatically for a new drop week. Edit only to reconcile a missed webhook.",
+    }),
+    defineField({
+      name: "unitsReservedThisWeek",
+      title: "Units reserved (pending checkout)",
+      type: "number",
+      initialValue: 0,
+      description:
+        "Held while checkout is in progress. Reset automatically for a new drop week.",
+    }),
+    defineField({
+      name: "inventoryWeekStart",
+      title: "Inventory week start",
+      type: "date",
+      hidden: true,
+      description: "Drop week these sold/reserved counters belong to.",
+    }),
+    defineField({
       name: "soldOut",
       title: "Sold out",
       type: "boolean",

@@ -88,7 +88,7 @@ export function ContactForm({
           type="text"
           required
           autoComplete="name"
-          className="mt-2 w-full rounded-sm border border-espresso/15 bg-cream px-4 py-3 text-sm text-foreground outline-none ring-primary/30 focus:ring-2"
+          className="mt-2 w-full rounded-sm border border-espresso/15 bg-white px-4 py-3 text-sm text-foreground outline-none ring-primary/30 focus:ring-2"
         />
       </div>
       <div>
@@ -101,7 +101,7 @@ export function ContactForm({
           type="email"
           required
           autoComplete="email"
-          className="mt-2 w-full rounded-sm border border-espresso/15 bg-cream px-4 py-3 text-sm text-foreground outline-none ring-primary/30 focus:ring-2"
+          className="mt-2 w-full rounded-sm border border-espresso/15 bg-white px-4 py-3 text-sm text-foreground outline-none ring-primary/30 focus:ring-2"
         />
       </div>
       <div>
@@ -113,7 +113,7 @@ export function ContactForm({
           name="message"
           required
           rows={6}
-          className="mt-2 w-full resize-y rounded-sm border border-espresso/15 bg-cream px-4 py-3 text-sm text-foreground outline-none ring-primary/30 focus:ring-2"
+          className="mt-2 w-full resize-y rounded-sm border border-espresso/15 bg-white px-4 py-3 text-sm text-foreground outline-none ring-primary/30 focus:ring-2"
         />
       </div>
       <Button type="submit" disabled={pending}>

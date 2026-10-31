@@ -1,7 +1,12 @@
 "use server";
 
-import { Resend } from "resend";
+import { headers } from "next/headers";
 import type { ContactFormState } from "@/app/(site)/contact/contact-form-state";
+import {
+  clientIpFromHeaders,
+  isContactRateLimited,
+} from "@/lib/checkout/rate-limit";
+import { sendContactEmails } from "@/lib/email";
 import { getSiteContactSettings } from "@/sanity/fetch";
 
 function cleanField(value: FormDataEntryValue | null, maxLength: number) {
@@ -19,12 +24,11 @@ export async function submitContactForm(
   _prevState: ContactFormState,
   formData: FormData,
 ): Promise<ContactFormState> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  if (!apiKey) {
+  const ip = clientIpFromHeaders(await headers());
+  if (await isContactRateLimited(ip)) {
     return {
       status: "error",
-      message:
-        "Email is not configured on this environment. Please use the contact links below.",
+      message: "Too many messages. Please wait a minute and try again.",
     };
   }
 
@@ -41,33 +45,23 @@ export async function submitContactForm(
   }
 
   const { contactEmail } = await getSiteContactSettings();
-  const to = contactEmail?.trim();
-  if (!to) {
+  const ownerEmail = contactEmail?.trim();
+  if (!ownerEmail) {
     return {
       status: "error",
       message: "No contact email is set in site settings.",
     };
   }
 
-  const from =
-    process.env.RESEND_FROM_EMAIL?.trim() ||
-    "Lucy's Doughjo <onboarding@resend.dev>";
-
-  const resend = new Resend(apiKey);
-
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    replyTo: email,
-    subject: `Contact from ${name} — Lucy's Doughjo`,
-    text: [`Name: ${name}`, `Email: ${email}`, "", message].join("\n"),
+  const result = await sendContactEmails({
+    name,
+    email,
+    message,
+    ownerEmail,
   });
 
-  if (error) {
-    return {
-      status: "error",
-      message: "We couldn't send your message. Please try again in a moment.",
-    };
+  if (!result.ok) {
+    return { status: "error", message: result.message };
   }
 
   return { status: "success" };

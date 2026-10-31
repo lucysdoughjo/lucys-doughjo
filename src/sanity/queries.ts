@@ -2,6 +2,7 @@ import { defineQuery } from "next-sanity";
 
 export const latestWeeklyDropQuery = defineQuery(`
   *[_type == "weeklyDrop"] | order(weekStart desc)[0] {
+    weekStart,
     status,
     bakersNote,
     "products": featuredProducts[]-> {
@@ -17,11 +18,18 @@ export const latestWeeklyDropQuery = defineQuery(`
         priceCents,
         label
       },
+      weeklyLimit,
+      unitsSoldThisWeek,
+      unitsReservedThisWeek,
       soldOut,
       availableThisWeek,
       image {
         asset,
         alt
+      },
+      "category": category-> {
+        name,
+        "slug": slug.current
       }
     }
   }
@@ -108,6 +116,9 @@ export const shopMenuQuery = defineQuery(`
         priceCents,
         label
       },
+      weeklyLimit,
+      unitsSoldThisWeek,
+      unitsReservedThisWeek,
       soldOut,
       availableThisWeek,
       allergens,
@@ -130,6 +141,7 @@ export const shopMenuQuery = defineQuery(`
 export const productsBySlugsQuery = defineQuery(`
   *[_type == "product" && slug.current in $slugs] {
     _id,
+    _rev,
     name,
     "slug": slug.current,
     description,
@@ -141,6 +153,9 @@ export const productsBySlugsQuery = defineQuery(`
       priceCents,
       label
     },
+    weeklyLimit,
+    unitsSoldThisWeek,
+    unitsReservedThisWeek,
     soldOut,
     availableThisWeek,
     allergens,
@@ -173,6 +188,9 @@ export const productBySlugQuery = defineQuery(`
       priceCents,
       label
     },
+    weeklyLimit,
+    unitsSoldThisWeek,
+    unitsReservedThisWeek,
     soldOut,
     availableThisWeek,
     allergens,
@@ -203,6 +221,93 @@ export const faqItemsQuery = defineQuery(`
     question,
     answer,
     order
+  }
+`);
+
+const orderFields = `
+    _id,
+    _rev,
+    orderNumber,
+    status,
+    weekStart,
+    customerName,
+    customerEmail,
+    customerPhone,
+    fulfillment,
+    fulfillmentAddress,
+    fulfillmentInstructions,
+    fulfillmentDateLabel,
+    orderNotes,
+    items,
+    subtotalCents,
+    deliveryFeeCents,
+    totalCents,
+    stripePaymentIntentId,
+    emailsSentAt,
+    inventoryCommittedAt,
+    inventoryCommittedProductIds,
+    reservationReleasedAt,
+    reservationReleasedProductIds,
+    refundedAt,
+    refundInventoryReversedAt,
+    refundInventoryReversedProductIds,
+    reservationUnits,
+    holdExpiresAt
+`;
+
+export const stalePendingOrdersQuery = defineQuery(`
+  *[_type == "order" && status == "pending" && (
+    (defined(holdExpiresAt) && holdExpiresAt < $now) ||
+    (!defined(holdExpiresAt) && _createdAt < $cutoff)
+  )] | order(_createdAt asc) [0...99] {
+    _id
+  }
+`);
+
+export const priorWeekPendingOrdersQuery = defineQuery(`
+  *[_type == "order" && status == "pending" && defined(weekStart) && weekStart != $weekStart] | order(_createdAt asc) [0...99] {
+    _id
+  }
+`);
+
+export const incompletePaidOrdersQuery = defineQuery(`
+  *[_type == "order" && status == "paid" && !defined(inventoryCommittedAt)] | order(_updatedAt asc) [0...99] {
+    _id
+  }
+`);
+
+export const unreleasedTerminalOrdersQuery = defineQuery(`
+  *[_type == "order" && (status == "canceled" || status == "failed") && !defined(reservationReleasedAt)] | order(_updatedAt asc) [0...99] {
+    _id
+  }
+`);
+
+export const incompleteRefundOrdersQuery = defineQuery(`
+  *[_type == "order" && status == "refunded" && defined(inventoryCommittedAt) && !defined(refundInventoryReversedAt)] | order(_updatedAt asc) [0...99] {
+    _id
+  }
+`);
+
+export const orderByIdQuery = defineQuery(`
+  *[_type == "order" && _id == $orderId][0] {
+    ${orderFields}
+  }
+`);
+
+export const orderByNumberQuery = defineQuery(`
+  *[_type == "order" && orderNumber == $orderNumber][0] { _id }
+`);
+
+export const orderByPaymentIntentQuery = defineQuery(`
+  *[_type == "order" && stripePaymentIntentId == $paymentIntentId][0] {
+    ${orderFields}
+  }
+`);
+
+export const productsForInventoryResetQuery = defineQuery(`
+  *[_type == "product" && (!defined(inventoryWeekStart) || inventoryWeekStart != $weekStart)] {
+    _id,
+    _rev
   }
 `);
 

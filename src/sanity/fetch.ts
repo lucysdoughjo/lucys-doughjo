@@ -17,6 +17,7 @@ import { isSanityConfigured } from "./env";
 import { urlForImage } from "./image";
 import { mapSanityProduct } from "./map-product";
 import { sanityClient } from "./client";
+import { sanityFreshClient } from "./fresh-client";
 import {
   aboutPageQuery,
   allUpcomingEventsQuery,
@@ -86,8 +87,10 @@ export type FeaturedProduct = {
   description: string;
   imageUrl: string;
   imageAlt: string;
+  categorySlug: string;
   purchaseOptions: PurchaseOption[];
   soldOut: boolean;
+  unitsRemaining: number | null;
 };
 
 export type HomePageContent = {
@@ -162,6 +165,7 @@ type WeeklyDropRecord = {
     soldOut?: boolean;
     availableThisWeek?: boolean;
     image?: { asset?: unknown; alt?: string };
+    category?: { name?: string; slug?: string };
   }> | null;
 };
 
@@ -241,7 +245,7 @@ const placeholderDetailedEvents: DetailedUpcomingEvent[] = [
 const fetchSiteSettings = cache(async (): Promise<SiteSettingsRecord | null> => {
   if (!isSanityConfigured) return null;
   try {
-    return await sanityClient.fetch(siteSettingsQuery);
+    return await sanityFreshClient.fetch(siteSettingsQuery);
   } catch {
     return null;
   }
@@ -250,7 +254,7 @@ const fetchSiteSettings = cache(async (): Promise<SiteSettingsRecord | null> => 
 const fetchLatestWeeklyDrop = cache(async (): Promise<WeeklyDropRecord | null> => {
   if (!isSanityConfigured) return null;
   try {
-    return await sanityClient.fetch(latestWeeklyDropQuery);
+    return await sanityFreshClient.fetch(latestWeeklyDropQuery);
   } catch {
     return null;
   }
@@ -338,7 +342,7 @@ export const getFeaturedProducts = cache(async (): Promise<FeaturedProduct[]> =>
   const products = drop?.products;
 
   if (!Array.isArray(products) || products.length === 0) {
-    return placeholderFeaturedProducts.map((p) => {
+    return placeholderFeaturedProducts.slice(0, 5).map((p) => {
       const full = getPlaceholderProductBySlug(p.slug);
       return {
         id: p.name,
@@ -348,19 +352,23 @@ export const getFeaturedProducts = cache(async (): Promise<FeaturedProduct[]> =>
         description: p.description,
         imageUrl: p.imageSrc,
         imageAlt: p.imageAlt,
+        categorySlug: full?.categorySlug ?? "artisan-sourdough",
         purchaseOptions: full?.purchaseOptions ?? [],
         soldOut: p.soldOut,
+        unitsRemaining: full?.unitsRemaining ?? null,
       };
     });
   }
 
   return products
     .filter((p) => p?.availableThisWeek !== false && p?.name && p?.description)
-    .slice(0, 4)
+    .slice(0, 5)
     .map((p) => {
       const mapped = mapSanityProduct({
         ...p,
-        category: { name: "Menu", slug: "artisan-sourdough" },
+        category: p.category?.slug
+          ? { name: p.category.name ?? "Menu", slug: p.category.slug }
+          : { name: "Menu", slug: "artisan-sourdough" },
       });
       if (!mapped) return null;
 
@@ -372,8 +380,10 @@ export const getFeaturedProducts = cache(async (): Promise<FeaturedProduct[]> =>
         description: mapped.description,
         imageUrl: mapped.imageUrl,
         imageAlt: mapped.imageAlt,
+        categorySlug: mapped.categorySlug,
         purchaseOptions: mapped.purchaseOptions,
         soldOut: mapped.soldOut,
+        unitsRemaining: mapped.unitsRemaining,
       };
     })
     .filter((p): p is FeaturedProduct => p !== null);

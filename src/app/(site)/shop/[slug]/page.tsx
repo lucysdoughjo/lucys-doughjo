@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductDetailForm } from "@/components/product-detail-form";
 import { ProductGallery } from "@/components/product-gallery";
+import { remainingStockLabel } from "@/lib/inventory";
+import { pageMetadata } from "@/lib/seo";
 import { getOrderWindowForSite } from "@/sanity/fetch";
 import { getAllProductSlugs, getProductBySlug } from "@/sanity/shop-fetch";
 
@@ -24,13 +26,27 @@ export async function generateMetadata({
   const product = await getProductBySlug(slug);
 
   if (!product) {
-    return { title: "Product not found · Lucy's Doughjo" };
+    return pageMetadata({
+      title: "Product not found",
+      description: "This item is not on the menu this week at Lucy's Doughjo.",
+      path: `/shop/${slug}`,
+    });
   }
 
-  return {
-    title: `${product.name} · Lucy's Doughjo`,
+  const ogImage = product.imageUrl?.trim() || null;
+
+  return pageMetadata({
+    title: product.name,
     description: product.description,
-  };
+    keywords: [
+      product.name,
+      "Lucy's Doughjo",
+      "Sunday Dough Drop",
+      "preorder bakery",
+    ],
+    path: `/shop/${slug}`,
+    ogImage,
+  });
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
@@ -80,6 +96,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
           ) : null}
 
           <p className="mt-4 text-sm text-foreground/70">{orderWindow.label}</p>
+          {product.soldOut ? (
+            <p className="mt-2 text-sm font-medium text-accent">
+              Sold out for this week&apos;s drop.
+            </p>
+          ) : remainingStockLabel(product.unitsRemaining) ? (
+            <p className="mt-2 text-sm font-medium text-foreground/80">
+              {remainingStockLabel(product.unitsRemaining)}
+            </p>
+          ) : null}
 
           <ProductDetailForm
             productId={product.id}
@@ -89,6 +114,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             purchaseOptions={product.purchaseOptions}
             soldOut={product.soldOut}
             orderingDisabled={orderingDisabled}
+            unitsRemaining={product.unitsRemaining}
           />
         </div>
       </div>
