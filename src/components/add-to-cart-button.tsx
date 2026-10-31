@@ -38,13 +38,14 @@ export function AddToCartButton({
       )
     : undefined;
   const inCart = Boolean(existing);
+  const quantityUnchanged = inCart && existing?.packs === packs;
 
   useEffect(() => {
     setJustSaved(false);
   }, [purchaseOption?.id]);
 
   function handleClick() {
-    if (cannotOrder || !purchaseOption) return;
+    if (cannotOrder || !purchaseOption || quantityUnchanged) return;
 
     if (inCart) {
       setLinePacks(productId, purchaseOption.id, packs);
@@ -80,7 +81,7 @@ export function AddToCartButton({
       type="button"
       variant="primary"
       className={className}
-      disabled={cannotOrder}
+      disabled={cannotOrder || quantityUnchanged}
       onClick={handleClick}
     >
       {label}

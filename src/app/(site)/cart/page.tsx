@@ -1,6 +1,8 @@
 import { CartPageContent } from "@/components/cart-page-content";
+import { toCartCatalogProduct } from "@/lib/cart-validate";
 import { pageMetadata } from "@/lib/seo";
 import { getOrderWindowForSite } from "@/sanity/fetch";
+import { getShopMenu } from "@/sanity/shop-fetch";
 
 export const metadata = pageMetadata({
   title: "Cart",
@@ -10,7 +12,14 @@ export const metadata = pageMetadata({
 });
 
 export default async function CartPage() {
-  const orderWindow = await getOrderWindowForSite();
+  const [orderWindow, menu] = await Promise.all([
+    getOrderWindowForSite(),
+    getShopMenu(),
+  ]);
 
-  return <CartPageContent orderWindow={orderWindow} />;
+  const catalog = menu.categories.flatMap((category) =>
+    category.products.map(toCartCatalogProduct),
+  );
+
+  return <CartPageContent orderWindow={orderWindow} catalog={catalog} />;
 }

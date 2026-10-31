@@ -16,7 +16,7 @@ export async function validateCartLinesAction(
   lines: unknown,
 ): Promise<CartValidationResult> {
   const ip = clientIpFromHeaders(await headers());
-  if (await isCartRateLimited(ip)) {
+  if (isCartRateLimited(ip)) {
     return {
       ok: false,
       error: "Too many cart checks. Please wait a minute and try again.",
