@@ -86,8 +86,8 @@ export async function isContactRateLimited(key: string): Promise<boolean> {
   return consumeDurableRateLimit(`contact:${key}`, CONTACT_MAX_REQUESTS, false);
 }
 
-export async function isCartRateLimited(key: string): Promise<boolean> {
-  return consumeDurableRateLimit(`cart:${key}`, CART_MAX_REQUESTS, false);
+export function isCartRateLimited(key: string): boolean {
+  return isRateLimited(`cart:${key}`, CART_MAX_REQUESTS);
 }
 
 export function clientIpFromHeaders(headerList: Headers): string {

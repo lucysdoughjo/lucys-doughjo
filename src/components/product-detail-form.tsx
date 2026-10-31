@@ -185,7 +185,7 @@ export function ProductDetailForm({
           className="w-full sm:w-auto"
         />
         {hydrated && lines.length > 0 ? (
-          <Button href="/checkout" variant="secondary" className="w-full sm:w-auto">
+          <Button href="/cart" variant="secondary" className="w-full sm:w-auto">
             Checkout →
           </Button>
         ) : (

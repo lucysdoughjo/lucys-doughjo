@@ -7,11 +7,36 @@ import { getOrderWindowForSite } from "@/sanity/fetch";
 import { getProductsBySlugs } from "@/sanity/shop-fetch";
 import type { ShopProduct } from "@/sanity/shop-types";
 
+export type CartCatalogProduct = Pick<
+  ShopProduct,
+  | "id"
+  | "slug"
+  | "name"
+  | "imageUrl"
+  | "purchaseOptions"
+  | "soldOut"
+  | "availableThisWeek"
+  | "unitsRemaining"
+>;
+
 export type ValidatedCartLine = CartLine & {
   soldOut: boolean;
   unavailable: boolean;
   priceChanged: boolean;
 };
+
+export function toCartCatalogProduct(product: ShopProduct): CartCatalogProduct {
+  return {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    imageUrl: product.imageUrl,
+    purchaseOptions: product.purchaseOptions,
+    soldOut: product.soldOut,
+    availableThisWeek: product.availableThisWeek,
+    unitsRemaining: product.unitsRemaining,
+  };
+}
 
 export type CartValidationSuccess = {
   ok: true;
@@ -30,7 +55,7 @@ export type CartValidationResult =
 
 /** Match pack size first; fall back to option id when quantity match is ambiguous. */
 export function findPurchaseOptionForLine(
-  product: ShopProduct,
+  product: CartCatalogProduct,
   line: CartLine,
 ): PurchaseOption | null {
   const byQuantity = product.purchaseOptions.filter(
@@ -54,7 +79,7 @@ export function findPurchaseOptionForLine(
 
 export function validateLineAgainstProduct(
   line: CartLine,
-  product: ShopProduct | null | undefined,
+  product: CartCatalogProduct | null | undefined,
 ): ValidatedCartLine {
   if (!product || !product.availableThisWeek) {
     return {
@@ -117,7 +142,7 @@ export function validateLineAgainstProduct(
 
 export function validateCartLinesWithProducts(
   lines: CartLine[],
-  productsBySlug: Map<string, ShopProduct>,
+  productsBySlug: Map<string, CartCatalogProduct>,
 ): ValidatedCartLine[] {
   const usedUnitsBySlug = new Map<string, number>();
 
@@ -151,7 +176,10 @@ export async function validateCartLines(
   lines: CartLine[],
 ): Promise<CartValidationResult> {
   const uniqueSlugs = [...new Set(lines.map((line) => line.slug))];
-  const productResult = await getProductsBySlugs(uniqueSlugs);
+  const [productResult, orderWindow] = await Promise.all([
+    getProductsBySlugs(uniqueSlugs),
+    getOrderWindowForSite(),
+  ]);
 
   if (!productResult.ok) {
     return {
@@ -161,12 +189,9 @@ export async function validateCartLines(
     };
   }
 
-  const validated = validateCartLinesWithProducts(lines, productResult.bySlug);
-  const orderWindow = await getOrderWindowForSite();
-
   return {
     ok: true,
-    lines: validated,
+    lines: validateCartLinesWithProducts(lines, productResult.bySlug),
     orderWindow,
   };
 }

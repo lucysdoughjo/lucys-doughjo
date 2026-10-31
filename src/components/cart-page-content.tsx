@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { validateCartLinesAction } from "@/app/(site)/cart/validate-lines";
 import { Button } from "@/components/button";
 import {
@@ -12,8 +12,11 @@ import {
 import { SectionHeading } from "@/components/section-heading";
 import {
   cartHasCheckoutBlockers,
+  validateCartLinesWithProducts,
+  type CartCatalogProduct,
   type ValidatedCartLine,
 } from "@/lib/cart-validate";
+import type { CartLine } from "@/lib/cart-types";
 import {
   computeLineTotalCents,
   formatPrice,
@@ -23,6 +26,7 @@ import type { OrderWindowState } from "@/lib/order-window";
 
 type CartPageContentProps = {
   orderWindow: OrderWindowState;
+  catalog: CartCatalogProduct[];
 };
 
 const VALIDATION_DEBOUNCE_MS = 250;
@@ -49,7 +53,25 @@ function findValidationForLine(
   );
 }
 
-export function CartPageContent({ orderWindow }: CartPageContentProps) {
+function liveValidationMatchesCart(
+  live: ValidatedCartLine[],
+  lines: CartLine[],
+): boolean {
+  if (live.length !== lines.length) return false;
+  return lines.every((line) =>
+    live.some(
+      (entry) =>
+        entry.slug === line.slug &&
+        entry.tierQuantity === line.tierQuantity &&
+        entry.packs === line.packs,
+    ),
+  );
+}
+
+export function CartPageContent({
+  orderWindow,
+  catalog,
+}: CartPageContentProps) {
   const {
     hydrated,
     lines,
@@ -58,55 +80,82 @@ export function CartPageContent({ orderWindow }: CartPageContentProps) {
     removeLine,
     applyValidatedLines,
   } = useCart();
-  const [validated, setValidated] = useState<ValidatedCartLine[] | null>(null);
+  const [liveValidated, setLiveValidated] = useState<ValidatedCartLine[] | null>(
+    null,
+  );
   const [liveOrderWindow, setLiveOrderWindow] =
     useState<OrderWindowState | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [priceNotice, setPriceNotice] = useState(false);
-  const [, startTransition] = useTransition();
   const requestRef = useRef(0);
+  const isFirstValidation = useRef(true);
+
+  const catalogBySlug = useMemo(() => {
+    const map = new Map<string, CartCatalogProduct>();
+    for (const product of catalog) {
+      map.set(product.slug, product);
+    }
+    return map;
+  }, [catalog]);
+
+  const catalogValidated = useMemo(
+    () => validateCartLinesWithProducts(lines, catalogBySlug),
+    [lines, catalogBySlug],
+  );
+
+  const validated =
+    liveValidated && liveValidationMatchesCart(liveValidated, lines)
+      ? liveValidated
+      : catalogValidated;
+
+  useEffect(() => {
+    if (!hydrated || lines.length === 0) return;
+    if (!validatedCatalogDiffersFromCart(lines, catalogValidated)) return;
+
+    applyValidatedLines(catalogValidated);
+    if (catalogValidated.some((line) => line.priceChanged)) {
+      setPriceNotice(true);
+    }
+  }, [hydrated, lines, catalogValidated, applyValidatedLines]);
 
   useEffect(() => {
     if (!hydrated || lines.length === 0) return;
 
     const requestId = ++requestRef.current;
-    const timer = window.setTimeout(() => {
-      startTransition(async () => {
-        const result = await validateCartLinesAction(lines);
-        if (requestId !== requestRef.current) return;
+    const delay = isFirstValidation.current ? 0 : VALIDATION_DEBOUNCE_MS;
 
-        if (!result.ok) {
-          setValidationError(result.error);
-          return;
-        }
+    const timer = window.setTimeout(async () => {
+      isFirstValidation.current = false;
+      const result = await validateCartLinesAction(lines);
+      if (requestId !== requestRef.current) return;
 
-        setValidationError(null);
-        setLiveOrderWindow(result.orderWindow);
-        setValidated(result.lines);
-        const changed = result.lines.some((line) => line.priceChanged);
-        setPriceNotice(changed);
+      if (!result.ok) {
+        setValidationError(result.error);
+        return;
+      }
 
-        if (validatedCatalogDiffersFromCart(lines, result.lines)) {
-          applyValidatedLines(result.lines);
-        }
-      });
-    }, VALIDATION_DEBOUNCE_MS);
+      setValidationError(null);
+      setLiveOrderWindow(result.orderWindow);
+      setLiveValidated(result.lines);
+      if (result.lines.some((line) => line.priceChanged)) {
+        setPriceNotice(true);
+      }
+
+      if (validatedCatalogDiffersFromCart(lines, result.lines)) {
+        applyValidatedLines(result.lines);
+      }
+    }, delay);
 
     return () => window.clearTimeout(timer);
   }, [hydrated, lines, applyValidatedLines]);
 
   const effectiveOrderWindow = liveOrderWindow ?? orderWindow;
-  const hasBlockers =
-    validated !== null && validated.length > 0
-      ? cartHasCheckoutBlockers(validated)
-      : true;
-  const validationReady = validated !== null && !validationError;
+  const hasBlockers = cartHasCheckoutBlockers(validated);
 
   const canCheckout =
     effectiveOrderWindow.isOpen &&
     lines.length > 0 &&
     hydrated &&
-    validationReady &&
     !hasBlockers;
 
   const checkoutHint = useMemo(() => {
@@ -296,9 +345,7 @@ export function CartPageContent({ orderWindow }: CartPageContentProps) {
           ) : (
             <Button type="button" disabled>
               {effectiveOrderWindow.isOpen
-                ? validationReady
-                  ? "Checkout unavailable"
-                  : "Checking cart…"
+                ? "Checkout unavailable"
                 : "Orders closed"}
             </Button>
           )}
