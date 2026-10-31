@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import {
-  handlePaymentIntentFailedOrCanceled,
+  handleChargeRefunded,
+  handlePaymentIntentCanceled,
   handlePaymentIntentSucceeded,
 } from "@/lib/checkout/fulfill-payment";
 import {
@@ -40,17 +41,30 @@ export async function POST(request: Request) {
     switch (event.type) {
       case "payment_intent.succeeded": {
         const intent = event.data.object as Stripe.PaymentIntent;
-        await handlePaymentIntentSucceeded(intent.id);
-        break;
-      }
-      case "payment_intent.payment_failed": {
-        const intent = event.data.object as Stripe.PaymentIntent;
-        await handlePaymentIntentFailedOrCanceled(intent.id, "failed");
+        await handlePaymentIntentSucceeded({
+          paymentIntentId: intent.id,
+          amountCents: intent.amount,
+          orderId: intent.metadata?.orderId,
+        });
         break;
       }
       case "payment_intent.canceled": {
         const intent = event.data.object as Stripe.PaymentIntent;
-        await handlePaymentIntentFailedOrCanceled(intent.id, "canceled");
+        await handlePaymentIntentCanceled(intent.id);
+        break;
+      }
+      case "charge.refunded": {
+        const charge = event.data.object as Stripe.Charge;
+        const paymentIntentId =
+          typeof charge.payment_intent === "string"
+            ? charge.payment_intent
+            : charge.payment_intent?.id;
+        if (paymentIntentId) {
+          await handleChargeRefunded({
+            paymentIntentId,
+            amountRefundedCents: charge.amount_refunded,
+          });
+        }
         break;
       }
       default:

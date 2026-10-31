@@ -5,27 +5,26 @@ import Link from "next/link";
 import { Button } from "@/components/button";
 import { OrderSuccessClearCart } from "@/components/order-success-clear-cart";
 import { SectionHeading } from "@/components/section-heading";
-import { formatPrice } from "@/lib/pricing";
 
 type OrderStatusResponse = {
   orderNumber?: string;
   status?: string;
-  fulfillment?: string;
-  fulfillmentAddress?: string;
-  totalCents?: number;
+  paymentStatus?: string;
   error?: string;
 };
 
 export function OrderSuccessContent({
   paymentIntentId,
+  clientSecret,
 }: {
   paymentIntentId: string | null;
+  clientSecret: string | null;
 }) {
   const [data, setData] = useState<OrderStatusResponse | null>(null);
-  const [loading, setLoading] = useState(Boolean(paymentIntentId));
+  const [loading, setLoading] = useState(Boolean(paymentIntentId && clientSecret));
 
   useEffect(() => {
-    if (!paymentIntentId) return;
+    if (!paymentIntentId || !clientSecret) return;
 
     let cancelled = false;
     let attempts = 0;
@@ -33,7 +32,7 @@ export function OrderSuccessContent({
     async function poll() {
       attempts += 1;
       const response = await fetch(
-        `/api/order/status?payment_intent=${encodeURIComponent(paymentIntentId!)}`,
+        `/api/order/status?payment_intent=${encodeURIComponent(paymentIntentId!)}&payment_intent_client_secret=${encodeURIComponent(clientSecret!)}`,
       );
       const json = (await response.json()) as OrderStatusResponse;
       if (cancelled) return;
@@ -52,9 +51,9 @@ export function OrderSuccessContent({
     return () => {
       cancelled = true;
     };
-  }, [paymentIntentId]);
+  }, [paymentIntentId, clientSecret]);
 
-  if (!paymentIntentId) {
+  if (!paymentIntentId || !clientSecret) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <SectionHeading
@@ -76,11 +75,19 @@ export function OrderSuccessContent({
       <OrderSuccessClearCart shouldClear={paid} />
       <SectionHeading
         eyebrow="Thank you"
-        title={paid ? "Your order is confirmed" : loading ? "Confirming payment…" : "Payment received"}
+        title={
+          paid
+            ? "Your order is confirmed"
+            : loading
+              ? "Confirming payment…"
+              : "Still confirming your order"
+        }
         description={
           paid
             ? `Order ${data?.orderNumber ?? ""} is in. You'll get a Stripe receipt and a confirmation email shortly.`
-            : "This usually takes a few seconds. Please keep this page open."
+            : loading
+              ? "This usually takes a few seconds. Please keep this page open."
+              : "We're still waiting on payment confirmation. Check your email or contact us if you were charged."
         }
       />
 
@@ -90,24 +97,6 @@ export function OrderSuccessContent({
             <dt className="font-semibold text-foreground">Order number</dt>
             <dd>{data.orderNumber}</dd>
           </div>
-          {data.fulfillment ? (
-            <div>
-              <dt className="font-semibold text-foreground">Fulfillment</dt>
-              <dd className="capitalize">{data.fulfillment}</dd>
-            </div>
-          ) : null}
-          {data.fulfillmentAddress ? (
-            <div>
-              <dt className="font-semibold text-foreground">Details</dt>
-              <dd className="whitespace-pre-line">{data.fulfillmentAddress}</dd>
-            </div>
-          ) : null}
-          {typeof data.totalCents === "number" ? (
-            <div>
-              <dt className="font-semibold text-foreground">Total</dt>
-              <dd>{formatPrice(data.totalCents)}</dd>
-            </div>
-          ) : null}
         </dl>
       ) : null}
 

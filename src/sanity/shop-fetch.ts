@@ -7,7 +7,7 @@ import {
 } from "@/lib/shop-catalog";
 import { isSanityConfigured } from "./env";
 import { urlForImage } from "./image";
-import { sanityClient } from "./client";
+import { sanityFreshClient } from "./fresh-client";
 import { mapSanityProduct } from "./map-product";
 import {
   latestWeeklyDropQuery,
@@ -21,7 +21,7 @@ import type { ShopMenu, ShopProduct } from "./shop-types";
 const fetchLatestWeeklyDropNote = cache(async (): Promise<string | null> => {
   if (!isSanityConfigured) return null;
   try {
-    const drop = await sanityClient.fetch(latestWeeklyDropQuery);
+    const drop = await sanityFreshClient.fetch(latestWeeklyDropQuery);
     return drop?.bakersNote ?? null;
   } catch {
     return null;
@@ -39,7 +39,7 @@ export const getShopMenu = cache(async (): Promise<ShopMenu> => {
   }
 
   try {
-    const categories = await sanityClient.fetch(shopMenuQuery);
+    const categories = await sanityFreshClient.fetch(shopMenuQuery);
 
     if (!Array.isArray(categories)) {
       return { bakersNote, categories: getPlaceholderShopMenu() };
@@ -112,7 +112,7 @@ export async function getProductsBySlugs(
   }
 
   try {
-    const records = await sanityClient.fetch(productsBySlugsQuery, {
+    const records = await sanityFreshClient.fetch(productsBySlugsQuery, {
       slugs: unique,
     });
 
@@ -140,7 +140,7 @@ export const getProductBySlug = cache(
     }
 
     try {
-      const record = await sanityClient.fetch(productBySlugQuery, { slug });
+      const record = await sanityFreshClient.fetch(productBySlugQuery, { slug });
       if (!record) {
         return null;
       }
@@ -157,7 +157,7 @@ export const getAllProductSlugs = cache(async (): Promise<string[]> => {
   }
 
   try {
-    const rows = await sanityClient.fetch(productSlugsQuery);
+    const rows = await sanityFreshClient.fetch(productSlugsQuery);
     if (!Array.isArray(rows)) {
       return [];
     }

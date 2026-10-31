@@ -159,16 +159,23 @@ export const product = defineType({
       title: "Units sold this week",
       type: "number",
       initialValue: 0,
-      readOnly: true,
-      description: "Updated automatically when orders are paid. Counts baked units.",
+      description:
+        "Updated when orders are paid. Reset automatically for a new drop week. Edit only to reconcile a missed webhook.",
     }),
     defineField({
       name: "unitsReservedThisWeek",
       title: "Units reserved (pending checkout)",
       type: "number",
       initialValue: 0,
-      readOnly: true,
-      description: "Held while checkout is in progress. Released if payment fails.",
+      description:
+        "Held while checkout is in progress. Reset automatically for a new drop week.",
+    }),
+    defineField({
+      name: "inventoryWeekStart",
+      title: "Inventory week start",
+      type: "date",
+      hidden: true,
+      description: "Drop week these sold/reserved counters belong to.",
     }),
     defineField({
       name: "soldOut",

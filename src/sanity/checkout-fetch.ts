@@ -1,5 +1,9 @@
 import { cache } from "react";
 import { getPlaceholderProductBySlug } from "@/lib/shop-catalog";
+import {
+  getOrderWindowState,
+  type OrderWindowState,
+} from "@/lib/order-window";
 import { isSanityConfigured } from "./env";
 import { mapCheckoutProduct } from "./map-checkout-product";
 import {
@@ -73,36 +77,74 @@ export async function getCheckoutProductsBySlugs(
   return bySlug;
 }
 
+function mapFulfillmentSettings(
+  settings: {
+    contactEmail?: string | null;
+    pickupAddress?: string | null;
+    pickupInstructions?: string | null;
+    deliveryZipCodes?: string[] | null;
+    deliveryFeeCents?: number | null;
+    deliveryNotes?: string | null;
+  } | null,
+): SiteFulfillmentSettings {
+  return {
+    contactEmail:
+      settings?.contactEmail?.trim() || defaultFulfillment.contactEmail,
+    pickupAddress:
+      settings?.pickupAddress?.trim() || defaultFulfillment.pickupAddress,
+    pickupInstructions:
+      settings?.pickupInstructions?.trim() ||
+      defaultFulfillment.pickupInstructions,
+    deliveryZipCodes: Array.isArray(settings?.deliveryZipCodes)
+      ? settings.deliveryZipCodes
+          .map((zip: string) => zip?.trim())
+          .filter(Boolean)
+      : defaultFulfillment.deliveryZipCodes,
+    deliveryFeeCents:
+      typeof settings?.deliveryFeeCents === "number"
+        ? Math.max(0, settings.deliveryFeeCents)
+        : defaultFulfillment.deliveryFeeCents,
+    deliveryNotes:
+      settings?.deliveryNotes?.trim() || defaultFulfillment.deliveryNotes,
+  };
+}
+
 export const getSiteFulfillmentSettings = cache(
-  async (): Promise<SiteFulfillmentSettings> => {
+  async (): Promise<SiteFulfillmentSettings | null> => {
     if (!isSanityWriteConfigured()) {
       return defaultFulfillment;
     }
 
     try {
       const settings = await sanityWriteClient.fetch(siteSettingsQuery);
-      return {
-        contactEmail:
-          settings?.contactEmail?.trim() || defaultFulfillment.contactEmail,
-        pickupAddress:
-          settings?.pickupAddress?.trim() || defaultFulfillment.pickupAddress,
-        pickupInstructions:
-          settings?.pickupInstructions?.trim() ||
-          defaultFulfillment.pickupInstructions,
-        deliveryZipCodes: Array.isArray(settings?.deliveryZipCodes)
-          ? settings.deliveryZipCodes
-              .map((zip: string) => zip?.trim())
-              .filter(Boolean)
-          : defaultFulfillment.deliveryZipCodes,
-        deliveryFeeCents:
-          typeof settings?.deliveryFeeCents === "number"
-            ? Math.max(0, settings.deliveryFeeCents)
-            : defaultFulfillment.deliveryFeeCents,
-        deliveryNotes:
-          settings?.deliveryNotes?.trim() || defaultFulfillment.deliveryNotes,
-      };
+      return mapFulfillmentSettings(settings);
     } catch {
-      return defaultFulfillment;
+      return null;
+    }
+  },
+);
+
+export const getCheckoutOrderWindow = cache(
+  async (): Promise<OrderWindowState | null> => {
+    const now = new Date();
+    if (!isSanityWriteConfigured()) {
+      return getOrderWindowState(now);
+    }
+
+    try {
+      const [settings, drop] = await Promise.all([
+        sanityWriteClient.fetch(siteSettingsQuery),
+        sanityWriteClient.fetch(latestWeeklyDropQuery),
+      ]);
+
+      return getOrderWindowState(now, {
+        forceClosed: settings?.forceClosed,
+        customOpenAt: settings?.customOpenAt,
+        customCloseAt: settings?.customCloseAt,
+        dropStatus: drop?.status ?? null,
+      });
+    } catch {
+      return null;
     }
   },
 );

@@ -201,6 +201,56 @@ describe("quoteOrder", () => {
     expect(result.code).toBe("over_weekly_limit");
   });
 
+  it("rejects when two pack sizes of one product exceed the weekly limit", () => {
+    const purchaseOptions = [
+      ...buildPurchaseOptions({
+        priceCents: 1000,
+        unitsPerItem: 1,
+        unitLabel: "each",
+      }),
+      {
+        id: "3-2500",
+        tierQuantity: 3,
+        tierPriceCents: 2500,
+        label: "3 for $25",
+      },
+    ];
+    const product = makeCheckoutProduct({
+      weeklyLimit: 3,
+      unitsSoldThisWeek: 0,
+      unitsReservedThisWeek: 0,
+      purchaseOptions,
+    });
+
+    const result = quoteOrder({
+      cartLines: [
+        { ...cartLine, packs: 1, tierQuantity: 1, optionId: purchaseOptions[0].id },
+        {
+          ...cartLine,
+          packs: 1,
+          optionId: "3-2500",
+          optionLabel: "3 for $25",
+          tierQuantity: 3,
+          tierPriceCents: 2500,
+        },
+      ],
+      customer: {
+        name: "Lucy",
+        email: "buyer@example.com",
+        phone: "(909) 555-0100",
+        fulfillment: "pickup",
+      },
+      fulfillmentSettings,
+      productsBySlug: new Map([[product.slug, product]]),
+      orderWindow: openWindow,
+      weekStart: null,
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("over_weekly_limit");
+  });
+
   it("rejects an invalid phone number", () => {
     const product = makeCheckoutProduct();
     const result = quoteOrder({

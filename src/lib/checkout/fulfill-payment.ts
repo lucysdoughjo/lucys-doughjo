@@ -1,13 +1,15 @@
-import { getNextSundayPacificLabel } from "@/lib/checkout/sunday-label";
 import { sendOrderEmails } from "@/lib/email";
 import type { OrderEmailPayload } from "@/lib/email/order-types";
+import { isFullRefund } from "@/lib/checkout/order-lifecycle";
 import {
-  expireStalePendingOrders,
+  attachPaymentIntentToOrder,
+  fulfillSucceededPayment,
+  getOrderById,
   getOrderByPaymentIntentId,
   markOrderEmailsSent,
-  markOrderPaidAndCommitInventory,
-  markOrderStatus,
-  releaseReservationUnits,
+  refundPaidOrderInventory,
+  refundStripePayment,
+  releasePendingOrder,
   type StoredOrder,
 } from "@/lib/checkout/orders";
 import { revalidateShopAfterInventory } from "@/lib/checkout/revalidate-shop";
@@ -24,7 +26,7 @@ function orderToEmailPayload(order: StoredOrder): OrderEmailPayload {
     fulfillment: order.fulfillment,
     fulfillmentAddress: order.fulfillmentAddress,
     fulfillmentInstructions: order.fulfillmentInstructions,
-    fulfillmentDateLabel: "",
+    fulfillmentDateLabel: order.fulfillmentDateLabel,
     items: order.items.map((line) => ({
       productId: line.productId,
       slug: line.slug,
@@ -43,55 +45,127 @@ function orderToEmailPayload(order: StoredOrder): OrderEmailPayload {
   };
 }
 
-export async function handlePaymentIntentSucceeded(
-  paymentIntentId: string,
-): Promise<void> {
-  const order = await getOrderByPaymentIntentId(paymentIntentId);
-  if (!order) {
-    return;
-  }
-
-  if (order.status === "paid") {
-    return;
-  }
-
-  const paidOrder = await markOrderPaidAndCommitInventory(order._id, order);
-  if (!paidOrder) {
-    return;
-  }
-
-  revalidateShopAfterInventory(paidOrder.items.map((item) => item.slug));
-
-  if (paidOrder.emailsSentAt) {
-    return;
-  }
+async function sendConfirmationEmails(order: StoredOrder): Promise<void> {
+  if (order.emailsSentAt) return;
 
   const settings = await getSiteFulfillmentSettings();
-  const ownerEmail = settings.contactEmail?.trim();
-  if (!ownerEmail) {
-    return;
-  }
+  const ownerEmail = settings?.contactEmail?.trim();
+  if (!ownerEmail) return;
 
-  const payload = orderToEmailPayload(paidOrder);
-  payload.fulfillmentDateLabel = getNextSundayPacificLabel();
-
-  const result = await sendOrderEmails({ payload, ownerEmail });
+  const result = await sendOrderEmails({
+    payload: orderToEmailPayload(order),
+    ownerEmail,
+  });
   if (result.ok) {
     await markOrderEmailsSent(order._id);
   }
 }
 
-export async function handlePaymentIntentFailedOrCanceled(
+async function loadOrderForPaymentIntent(input: {
+  paymentIntentId: string;
+  orderId?: string | null;
+}): Promise<StoredOrder | null> {
+  let order = await getOrderByPaymentIntentId(input.paymentIntentId);
+
+  if (!order && input.orderId) {
+    order = await getOrderById(input.orderId);
+    if (order && !order.stripePaymentIntentId) {
+      await attachPaymentIntentToOrder(order._id, input.paymentIntentId);
+      order = { ...order, stripePaymentIntentId: input.paymentIntentId };
+    }
+  }
+
+  return order;
+}
+
+async function refundMismatchedPayment(
+  order: StoredOrder,
   paymentIntentId: string,
-  status: "failed" | "canceled",
+): Promise<void> {
+  const refunded = await refundStripePayment(paymentIntentId);
+  if (order.status === "pending") {
+    await releasePendingOrder(order, "failed");
+  }
+  if (!refunded) {
+    throw new Error(
+      `Payment amount mismatch and refund failed for ${order._id}`,
+    );
+  }
+}
+
+export async function handlePaymentIntentSucceeded(input: {
+  paymentIntentId: string;
+  amountCents: number;
+  orderId?: string | null;
+}): Promise<StoredOrder> {
+  const order = await loadOrderForPaymentIntent(input);
+
+  if (!order) {
+    throw new Error(
+      `Order not found for payment intent ${input.paymentIntentId}`,
+    );
+  }
+
+  if (input.amountCents !== order.totalCents) {
+    console.error("Payment amount does not match order total", {
+      paymentIntentId: input.paymentIntentId,
+      orderId: order._id,
+      amountCents: input.amountCents,
+      totalCents: order.totalCents,
+    });
+    await refundMismatchedPayment(order, input.paymentIntentId);
+    return (await getOrderByPaymentIntentId(input.paymentIntentId)) ?? order;
+  }
+
+  const result = await fulfillSucceededPayment(order);
+
+  if (result.needsRefund) {
+    const refunded = await refundStripePayment(input.paymentIntentId);
+    if (!refunded) {
+      throw new Error(`Could not refund late payment for order ${order._id}`);
+    }
+    return result.order ?? order;
+  }
+
+  if (!result.order) {
+    throw new Error(`Could not mark order ${order._id} paid`);
+  }
+
+  if (result.incomplete) {
+    throw new Error(`Inventory commit incomplete for order ${order._id}`);
+  }
+
+  revalidateShopAfterInventory(result.order.items.map((item) => item.slug));
+  await sendConfirmationEmails(result.order);
+  return (
+    (await getOrderByPaymentIntentId(input.paymentIntentId)) ?? result.order
+  );
+}
+
+export async function handlePaymentIntentCanceled(
+  paymentIntentId: string,
 ): Promise<void> {
   const order = await getOrderByPaymentIntentId(paymentIntentId);
-  if (!order || order.status === "paid") {
+  if (!order || order.status !== "pending") {
     return;
   }
 
-  await releaseReservationUnits(order.reservationUnits);
-  await markOrderStatus(order._id, status);
-  revalidateShopAfterInventory(order.items.map((item) => item.slug));
-  void expireStalePendingOrders();
+  await releasePendingOrder(order, "canceled");
+}
+
+export async function handleChargeRefunded(input: {
+  paymentIntentId: string;
+  amountRefundedCents: number;
+}): Promise<void> {
+  const order = await getOrderByPaymentIntentId(input.paymentIntentId);
+  if (!order) return;
+
+  if (!isFullRefund(input.amountRefundedCents, order.totalCents)) {
+    return;
+  }
+
+  const refunded = await refundPaidOrderInventory(order);
+  if (refunded) {
+    revalidateShopAfterInventory(refunded.items.map((item) => item.slug));
+  }
 }

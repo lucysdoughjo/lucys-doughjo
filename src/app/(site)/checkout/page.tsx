@@ -1,8 +1,14 @@
 import { CheckoutPageContent } from "@/components/checkout-page-content";
+import { Button } from "@/components/button";
+import { SectionHeading } from "@/components/section-heading";
 import { getNextSundayPacificLabel } from "@/lib/checkout/sunday-label";
 import { pageMetadata } from "@/lib/seo";
-import { getSiteFulfillmentSettings } from "@/sanity/checkout-fetch";
-import { getOrderWindowForSite } from "@/sanity/fetch";
+import {
+  getCheckoutOrderWindow,
+  getSiteFulfillmentSettings,
+} from "@/sanity/checkout-fetch";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = pageMetadata({
   title: "Checkout",
@@ -13,9 +19,24 @@ export const metadata = pageMetadata({
 
 export default async function CheckoutPage() {
   const [orderWindow, fulfillmentSettings] = await Promise.all([
-    getOrderWindowForSite(),
+    getCheckoutOrderWindow(),
     getSiteFulfillmentSettings(),
   ]);
+
+  if (!orderWindow || !fulfillmentSettings) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+        <SectionHeading
+          eyebrow="Checkout"
+          title="Checkout is temporarily unavailable"
+          description="We couldn't load this week's pickup and delivery settings. Please try again in a moment."
+        />
+        <Button href="/cart" variant="secondary" className="mt-8">
+          ← Back to cart
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <CheckoutPageContent

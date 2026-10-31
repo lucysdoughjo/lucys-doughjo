@@ -23,6 +23,10 @@ export async function POST(request: NextRequest) {
   for (const path of paths) {
     revalidatePath(path);
   }
+  revalidatePath("/shop/[slug]", "page");
 
-  return NextResponse.json({ revalidated: true, paths });
+  return NextResponse.json({
+    revalidated: true,
+    paths: [...paths, "/shop/[slug]"],
+  });
 }

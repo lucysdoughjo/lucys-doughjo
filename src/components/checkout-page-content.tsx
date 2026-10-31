@@ -2,7 +2,7 @@
 
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckoutPaymentForm } from "@/components/checkout-payment-form";
 import { Button } from "@/components/button";
@@ -44,6 +44,20 @@ export function CheckoutPageContent({
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [startingPayment, setStartingPayment] = useState(false);
+  const startingRef = useRef(false);
+  const [quoted, setQuoted] = useState<{
+    subtotalCents: number;
+    deliveryFeeCents: number;
+    totalCents: number;
+    lines: Array<{
+      productId: string;
+      optionId: string;
+      name: string;
+      optionLabel: string;
+      packs: number;
+      lineTotalCents: number;
+    }>;
+  } | null>(null);
 
   useEffect(() => {
     if (hydrated && lines.length === 0 && !clientSecret) {
@@ -52,8 +66,11 @@ export function CheckoutPageContent({
   }, [hydrated, lines.length, router, clientSecret]);
 
   const deliveryFeeCents =
-    fulfillment === "delivery" ? fulfillmentSettings.deliveryFeeCents : 0;
-  const totalCents = subtotalCents + deliveryFeeCents;
+    quoted?.deliveryFeeCents ??
+    (fulfillment === "delivery" ? fulfillmentSettings.deliveryFeeCents : 0);
+  const displaySubtotalCents = quoted?.subtotalCents ?? subtotalCents;
+  const totalCents = quoted?.totalCents ?? displaySubtotalCents + deliveryFeeCents;
+  const summaryLines = quoted?.lines ?? lines;
 
   const returnUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -72,6 +89,8 @@ export function CheckoutPageContent({
       return;
     }
 
+    if (startingRef.current) return;
+    startingRef.current = true;
     setStartingPayment(true);
 
     try {
@@ -97,18 +116,43 @@ export function CheckoutPageContent({
         clientSecret?: string;
         orderNumber?: string;
         error?: string;
+        subtotalCents?: number;
+        deliveryFeeCents?: number;
+        totalCents?: number;
+        lines?: Array<{
+          productId: string;
+          optionId: string;
+          name: string;
+          optionLabel: string;
+          packs: number;
+          lineTotalCents: number;
+        }>;
       };
 
       if (!response.ok || !data.clientSecret || !data.orderNumber) {
         setFormError(data.error ?? "Could not start checkout. Please try again.");
-        setStartingPayment(false);
+        startingRef.current = false;
         return;
       }
 
       setClientSecret(data.clientSecret);
       setOrderNumber(data.orderNumber);
+      if (
+        typeof data.subtotalCents === "number" &&
+        typeof data.deliveryFeeCents === "number" &&
+        typeof data.totalCents === "number" &&
+        Array.isArray(data.lines)
+      ) {
+        setQuoted({
+          subtotalCents: data.subtotalCents,
+          deliveryFeeCents: data.deliveryFeeCents,
+          totalCents: data.totalCents,
+          lines: data.lines,
+        });
+      }
     } catch {
       setFormError("Network error. Please try again.");
+      startingRef.current = false;
     } finally {
       setStartingPayment(false);
     }
@@ -319,7 +363,7 @@ export function CheckoutPageContent({
             Order summary
           </h2>
           <ul className="mt-4 space-y-4">
-            {lines.map((line) => (
+            {summaryLines.map((line) => (
               <li key={`${line.productId}-${line.optionId}`} className="text-sm">
                 <p className="font-medium text-foreground text-base">{line.name}</p>
                 <p className="text-foreground/70 text-base">
@@ -327,7 +371,11 @@ export function CheckoutPageContent({
                   {line.packs > 1 ? ` × ${line.packs}` : ""}
                 </p>
                 <p className="mt-1 font-medium text-base">
-                  {formatPrice(line.tierPriceCents * line.packs)}
+                  {formatPrice(
+                    "lineTotalCents" in line
+                      ? line.lineTotalCents
+                      : line.tierPriceCents * line.packs,
+                  )}
                 </p>
               </li>
             ))}
@@ -335,7 +383,7 @@ export function CheckoutPageContent({
           <dl className="mt-6 space-y-2 border-t border-espresso/10 pt-4 text-sm">
             <div className="flex justify-between">
               <dt className="text-foreground/70">Subtotal</dt>
-              <dd className="text-lg">{formatPrice(subtotalCents)}</dd>
+              <dd className="text-lg">{formatPrice(displaySubtotalCents)}</dd>
             </div>
             {deliveryFeeCents > 0 ? (
               <div className="flex justify-between">

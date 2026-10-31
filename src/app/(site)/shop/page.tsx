@@ -26,10 +26,7 @@ export default async function ShopPage() {
   ]);
 
   const sections = buildShopDisplaySections(menu);
-  const productCount = menu.categories.reduce(
-    (total, category) => total + category.products.length,
-    0,
-  );
+  const hasMenu = sections.length > 0;
 
   return (
     <>
@@ -42,7 +39,7 @@ export default async function ShopPage() {
 
         <p className="mt-6 text-sm text-foreground/80">{orderWindow.label}</p>
 
-        {productCount === 0 ? (
+        {!hasMenu ? (
           <p className="mt-10 rounded-sm border border-espresso/10 bg-white/40 px-4 py-6 text-sm leading-relaxed text-foreground/80">
             The menu for this week hasn&apos;t been posted yet. When Lucy opens
             the drop, items will show up here grouped by category.
@@ -50,7 +47,7 @@ export default async function ShopPage() {
         ) : null}
       </div>
 
-      {productCount > 0 ? (
+      {hasMenu ? (
         <div className="space-y-0">
           {sections.map((section) => (
             <ShopDisplaySectionBlock key={section.id} section={section} />

@@ -4,6 +4,8 @@ export const order = defineType({
   name: "order",
   title: "Order",
   type: "document",
+  description:
+    "Contains customer PII. Keep the Sanity dataset private. Changing status here does not move inventory — use the website checkout/webhooks.",
   fields: [
     defineField({
       name: "orderNumber",
@@ -15,12 +17,15 @@ export const order = defineType({
       name: "status",
       title: "Status",
       type: "string",
+      description:
+        "Updated by Stripe checkout. Manual edits do not reserve, commit, or release weekly inventory.",
       options: {
         list: [
           { title: "Pending payment", value: "pending" },
           { title: "Paid", value: "paid" },
           { title: "Canceled", value: "canceled" },
           { title: "Failed", value: "failed" },
+          { title: "Refunded", value: "refunded" },
         ],
       },
       initialValue: "pending",
@@ -68,6 +73,11 @@ export const order = defineType({
       title: "Pickup / delivery instructions",
       type: "text",
       rows: 2,
+    }),
+    defineField({
+      name: "fulfillmentDateLabel",
+      title: "Fulfillment Sunday",
+      type: "string",
     }),
     defineField({
       name: "orderNotes",
@@ -122,6 +132,49 @@ export const order = defineType({
       name: "emailsSentAt",
       title: "Confirmation emails sent at",
       type: "datetime",
+    }),
+    defineField({
+      name: "inventoryCommittedAt",
+      title: "Inventory committed at",
+      type: "datetime",
+    }),
+    defineField({
+      name: "inventoryCommittedProductIds",
+      title: "Products with committed inventory",
+      type: "array",
+      of: [{ type: "string" }],
+    }),
+    defineField({
+      name: "holdExpiresAt",
+      title: "Hold expires at",
+      type: "datetime",
+    }),
+    defineField({
+      name: "reservationReleasedAt",
+      title: "Reservation released at",
+      type: "datetime",
+    }),
+    defineField({
+      name: "reservationReleasedProductIds",
+      title: "Products with released reservation",
+      type: "array",
+      of: [{ type: "string" }],
+    }),
+    defineField({
+      name: "refundedAt",
+      title: "Refunded at",
+      type: "datetime",
+    }),
+    defineField({
+      name: "refundInventoryReversedAt",
+      title: "Refund inventory reversed at",
+      type: "datetime",
+    }),
+    defineField({
+      name: "refundInventoryReversedProductIds",
+      title: "Products with reversed refund inventory",
+      type: "array",
+      of: [{ type: "string" }],
     }),
     defineField({
       name: "reservationUnits",

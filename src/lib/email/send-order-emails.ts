@@ -18,7 +18,7 @@ export type SendOrderEmailsResult =
 
 /**
  * Sends customer order confirmation and owner notification.
- * Call from checkout after payment succeeds (not wired yet).
+ * Idempotent per order number so webhook and status-poll retries are safe.
  */
 export async function sendOrderEmails({
   payload,

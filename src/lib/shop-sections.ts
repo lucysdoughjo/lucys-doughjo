@@ -7,6 +7,27 @@ export type ShopDisplaySection = {
   products: ShopProduct[];
 };
 
+const sectionDefs = [
+  {
+    id: "artisan-loaves",
+    title: "Artisan Loaves",
+    orderKey: "artisanLoaves",
+    categorySlugs: ["artisan-sourdough"],
+  },
+  {
+    id: "bagels-and-muffins",
+    title: "Bagels & English Muffins",
+    orderKey: "bagelsAndMuffins",
+    categorySlugs: ["bagels", "english-muffins"],
+  },
+  {
+    id: "sweet-treats",
+    title: "Sweet Treats",
+    orderKey: "sweetTreats",
+    categorySlugs: ["cinnamon-rolls", "scones", "jumbo-cookies"],
+  },
+] as const;
+
 function indexProductsBySlug(menu: ShopMenu): Map<string, ShopProduct> {
   const map = new Map<string, ShopProduct>();
   for (const category of menu.categories) {
@@ -20,54 +41,62 @@ function indexProductsBySlug(menu: ShopMenu): Map<string, ShopProduct> {
 function pickOrdered(
   bySlug: Map<string, ShopProduct>,
   slugs: string[],
+  used: Set<string>,
 ): ShopProduct[] {
   const out: ShopProduct[] = [];
   for (const slug of slugs) {
     const product = bySlug.get(slug);
-    if (product) out.push(product);
+    if (!product || used.has(product.slug)) continue;
+    out.push(product);
+    used.add(product.slug);
   }
   return out;
 }
 
+function appendByCategory(
+  products: ShopProduct[],
+  categorySlugs: readonly string[],
+  used: Set<string>,
+): ShopProduct[] {
+  const extras: ShopProduct[] = [];
+  for (const product of products) {
+    if (used.has(product.slug)) continue;
+    if (!categorySlugs.includes(product.categorySlug)) continue;
+    extras.push(product);
+    used.add(product.slug);
+  }
+  return extras;
+}
+
 export function buildShopDisplaySections(menu: ShopMenu): ShopDisplaySection[] {
   const bySlug = indexProductsBySlug(menu);
-
-  const artisanLoaves = pickOrdered(
-    bySlug,
-    shopSectionProductOrder.artisanLoaves,
-  );
-  const bagelsAndMuffins = pickOrdered(
-    bySlug,
-    shopSectionProductOrder.bagelsAndMuffins,
-  );
-  const sweetTreats = pickOrdered(
-    bySlug,
-    shopSectionProductOrder.sweetTreats,
-  );
-
+  const allProducts = [...bySlug.values()];
+  const used = new Set<string>();
   const sections: ShopDisplaySection[] = [];
 
-  if (artisanLoaves.length > 0) {
+  for (const def of sectionDefs) {
+    const known = pickOrdered(
+      bySlug,
+      shopSectionProductOrder[def.orderKey] ?? [],
+      used,
+    );
+    const extras = appendByCategory(allProducts, def.categorySlugs, used);
+    const products = [...known, ...extras];
+    if (products.length === 0) continue;
+
     sections.push({
-      id: "artisan-loaves",
-      title: "Artisan Loaves",
-      products: artisanLoaves,
+      id: def.id,
+      title: def.title,
+      products,
     });
   }
 
-  if (bagelsAndMuffins.length > 0) {
+  const leftover = allProducts.filter((product) => !used.has(product.slug));
+  if (leftover.length > 0) {
     sections.push({
-      id: "bagels-and-muffins",
-      title: "Bagels & English Muffins",
-      products: bagelsAndMuffins,
-    });
-  }
-
-  if (sweetTreats.length > 0) {
-    sections.push({
-      id: "sweet-treats",
-      title: "Sweet Treats",
-      products: sweetTreats,
+      id: "more-this-week",
+      title: "More this week",
+      products: leftover,
     });
   }
 

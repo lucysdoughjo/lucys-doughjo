@@ -5,6 +5,8 @@ import { SiteHeader } from "@/components/site-header";
 import { SanityStatusBanner } from "@/components/sanity-status-banner";
 import { getOrderWindowForSite } from "@/sanity/fetch";
 
+export const revalidate = 300;
+
 export default async function SiteLayout({
   children,
 }: {

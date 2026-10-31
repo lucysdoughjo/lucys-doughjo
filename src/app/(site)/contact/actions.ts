@@ -1,6 +1,11 @@
 "use server";
 
+import { headers } from "next/headers";
 import type { ContactFormState } from "@/app/(site)/contact/contact-form-state";
+import {
+  clientIpFromHeaders,
+  isContactRateLimited,
+} from "@/lib/checkout/rate-limit";
 import { sendContactEmails } from "@/lib/email";
 import { getSiteContactSettings } from "@/sanity/fetch";
 
@@ -19,6 +24,14 @@ export async function submitContactForm(
   _prevState: ContactFormState,
   formData: FormData,
 ): Promise<ContactFormState> {
+  const ip = clientIpFromHeaders(await headers());
+  if (await isContactRateLimited(ip)) {
+    return {
+      status: "error",
+      message: "Too many messages. Please wait a minute and try again.",
+    };
+  }
+
   const name = cleanField(formData.get("name"), 120);
   const email = cleanField(formData.get("email"), 254);
   const message = cleanField(formData.get("message"), 4000);

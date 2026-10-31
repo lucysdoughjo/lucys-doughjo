@@ -45,6 +45,7 @@ export type QuoteErrorCode =
   | "empty_cart"
   | "orders_closed"
   | "catalog_unavailable"
+  | "settings_unavailable"
   | "product_unavailable"
   | "sold_out"
   | "option_unavailable"
@@ -173,6 +174,7 @@ export function quoteOrder(input: {
   }
 
   const quotedLines: QuoteLine[] = [];
+  const usedUnitsBySlug = new Map<string, number>();
 
   for (const line of lines) {
     const product = input.productsBySlug.get(line.slug);
@@ -202,12 +204,14 @@ export function quoteOrder(input: {
     }
 
     const units = unitsFromLine(option.tierQuantity, line.packs);
+    const alreadyQuoted = usedUnitsBySlug.get(product.slug) ?? 0;
 
     if (product.weeklyLimit !== null) {
       const remaining =
         product.weeklyLimit -
         product.unitsSoldThisWeek -
-        product.unitsReservedThisWeek;
+        product.unitsReservedThisWeek -
+        alreadyQuoted;
       if (units > remaining) {
         return {
           ok: false,
@@ -216,6 +220,8 @@ export function quoteOrder(input: {
         };
       }
     }
+
+    usedUnitsBySlug.set(product.slug, alreadyQuoted + units);
 
     quotedLines.push({
       productId: product.id,

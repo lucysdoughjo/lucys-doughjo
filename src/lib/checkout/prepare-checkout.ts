@@ -1,5 +1,5 @@
-import { getOrderWindowForSite } from "@/sanity/fetch";
 import {
+  getCheckoutOrderWindow,
   getCheckoutProductsBySlugs,
   getCurrentDropWeekStart,
   getSiteFulfillmentSettings,
@@ -22,9 +22,18 @@ export async function buildCheckoutQuote(input: {
     await Promise.all([
       getCheckoutProductsBySlugs(slugs),
       getSiteFulfillmentSettings(),
-      getOrderWindowForSite(),
+      getCheckoutOrderWindow(),
       getCurrentDropWeekStart(),
     ]);
+
+  if (!fulfillmentSettings || !orderWindow) {
+    return {
+      ok: false,
+      code: "settings_unavailable",
+      message:
+        "Checkout is temporarily unavailable. Please try again in a moment.",
+    };
+  }
 
   if (slugs.length > 0 && productsBySlug.size === 0) {
     return {

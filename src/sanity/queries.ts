@@ -224,17 +224,9 @@ export const faqItemsQuery = defineQuery(`
   }
 `);
 
-export const stalePendingOrdersQuery = defineQuery(`
-  *[_type == "order" && status == "pending" && _createdAt < $cutoff] {
+const orderFields = `
     _id,
-    stripePaymentIntentId,
-    reservationUnits
-  }
-`);
-
-export const orderByPaymentIntentQuery = defineQuery(`
-  *[_type == "order" && stripePaymentIntentId == $paymentIntentId][0] {
-    _id,
+    _rev,
     orderNumber,
     status,
     weekStart,
@@ -244,6 +236,7 @@ export const orderByPaymentIntentQuery = defineQuery(`
     fulfillment,
     fulfillmentAddress,
     fulfillmentInstructions,
+    fulfillmentDateLabel,
     orderNotes,
     items,
     subtotalCents,
@@ -251,7 +244,70 @@ export const orderByPaymentIntentQuery = defineQuery(`
     totalCents,
     stripePaymentIntentId,
     emailsSentAt,
-    reservationUnits
+    inventoryCommittedAt,
+    inventoryCommittedProductIds,
+    reservationReleasedAt,
+    reservationReleasedProductIds,
+    refundedAt,
+    refundInventoryReversedAt,
+    refundInventoryReversedProductIds,
+    reservationUnits,
+    holdExpiresAt
+`;
+
+export const stalePendingOrdersQuery = defineQuery(`
+  *[_type == "order" && status == "pending" && (
+    (defined(holdExpiresAt) && holdExpiresAt < $now) ||
+    (!defined(holdExpiresAt) && _createdAt < $cutoff)
+  )] | order(_createdAt asc) [0...99] {
+    _id
+  }
+`);
+
+export const priorWeekPendingOrdersQuery = defineQuery(`
+  *[_type == "order" && status == "pending" && defined(weekStart) && weekStart != $weekStart] | order(_createdAt asc) [0...99] {
+    _id
+  }
+`);
+
+export const incompletePaidOrdersQuery = defineQuery(`
+  *[_type == "order" && status == "paid" && !defined(inventoryCommittedAt)] | order(_updatedAt asc) [0...99] {
+    _id
+  }
+`);
+
+export const unreleasedTerminalOrdersQuery = defineQuery(`
+  *[_type == "order" && (status == "canceled" || status == "failed") && !defined(reservationReleasedAt)] | order(_updatedAt asc) [0...99] {
+    _id
+  }
+`);
+
+export const incompleteRefundOrdersQuery = defineQuery(`
+  *[_type == "order" && status == "refunded" && defined(inventoryCommittedAt) && !defined(refundInventoryReversedAt)] | order(_updatedAt asc) [0...99] {
+    _id
+  }
+`);
+
+export const orderByIdQuery = defineQuery(`
+  *[_type == "order" && _id == $orderId][0] {
+    ${orderFields}
+  }
+`);
+
+export const orderByNumberQuery = defineQuery(`
+  *[_type == "order" && orderNumber == $orderNumber][0] { _id }
+`);
+
+export const orderByPaymentIntentQuery = defineQuery(`
+  *[_type == "order" && stripePaymentIntentId == $paymentIntentId][0] {
+    ${orderFields}
+  }
+`);
+
+export const productsForInventoryResetQuery = defineQuery(`
+  *[_type == "product" && (!defined(inventoryWeekStart) || inventoryWeekStart != $weekStart)] {
+    _id,
+    _rev
   }
 `);
 

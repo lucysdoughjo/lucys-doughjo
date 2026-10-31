@@ -17,6 +17,7 @@ import { isSanityConfigured } from "./env";
 import { urlForImage } from "./image";
 import { mapSanityProduct } from "./map-product";
 import { sanityClient } from "./client";
+import { sanityFreshClient } from "./fresh-client";
 import {
   aboutPageQuery,
   allUpcomingEventsQuery,
@@ -244,7 +245,7 @@ const placeholderDetailedEvents: DetailedUpcomingEvent[] = [
 const fetchSiteSettings = cache(async (): Promise<SiteSettingsRecord | null> => {
   if (!isSanityConfigured) return null;
   try {
-    return await sanityClient.fetch(siteSettingsQuery);
+    return await sanityFreshClient.fetch(siteSettingsQuery);
   } catch {
     return null;
   }
@@ -253,7 +254,7 @@ const fetchSiteSettings = cache(async (): Promise<SiteSettingsRecord | null> => 
 const fetchLatestWeeklyDrop = cache(async (): Promise<WeeklyDropRecord | null> => {
   if (!isSanityConfigured) return null;
   try {
-    return await sanityClient.fetch(latestWeeklyDropQuery);
+    return await sanityFreshClient.fetch(latestWeeklyDropQuery);
   } catch {
     return null;
   }
